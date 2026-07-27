@@ -145,7 +145,9 @@ test("protects an owner dashboard for appointment tracking and status changes", 
   assert.match(dashboard, /\["today", "day", "week", "list", "availability"\]/);
   assert.match(dashboard, /openGaps/);
   assert.match(dashboard, /Quick details/);
-  assert.match(dashboard, /Appointment status colors/);
+  assert.match(dashboard, /Filter appointments by status/);
+  assert.match(dashboard, /aria-pressed=\{statusFilter === statusOption\}/);
+  assert.match(dashboard, /statusFilter === "all" \|\| appointment\.status === statusFilter/);
   assert.match(dashboard, /Mark complete/);
   assert.doesNotMatch(dashboard, />Confirm<\/button>/);
   assert.match(dashboard, /Add appointment/);

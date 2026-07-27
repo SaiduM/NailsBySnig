@@ -24,7 +24,7 @@ conflict-safe appointment booking and a private owner dashboard.
 - Automatic confirmation and client cancellation flow
 - Private owner dashboard with upcoming and past appointments
 - Owner Today, Day, Week, and List calendar views with open-time gaps,
-  color-coded statuses, and quick appointment details
+  filterable color-coded statuses, and quick appointment details
 - Owner actions for completion, cancellation, and manual booking
 - Owner controls for full-day time off, vacations, breaks, and partial-day
   calendar blocks

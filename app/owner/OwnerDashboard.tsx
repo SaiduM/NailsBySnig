@@ -19,6 +19,7 @@ type Appointment = {
 };
 
 type CalendarView = "today" | "day" | "week" | "list" | "availability";
+type StatusFilter = "all" | "confirmed" | "completed" | "cancelled";
 type Gap = { start: string; end: string };
 
 const OPEN_MINUTES = 9 * 60;
@@ -138,6 +139,7 @@ export function OwnerDashboard({ ownerName }: { ownerName: string }) {
   const [includePast, setIncludePast] = useState(false);
   const [view, setView] = useState<CalendarView>("today");
   const [anchorDate, setAnchorDate] = useState(today);
+  const [statusFilter, setStatusFilter] = useState<StatusFilter>("all");
   const [selectedReference, setSelectedReference] = useState("");
   const [state, setState] = useState<"loading" | "ready" | "error">("loading");
   const [message, setMessage] = useState("");
@@ -168,8 +170,14 @@ export function OwnerDashboard({ ownerName }: { ownerName: string }) {
   }, []);
 
   const visibleDates = view === "week" ? businessWeek(anchorDate) : [view === "today" ? today : anchorDate];
-  const calendarAppointments = appointments.filter((appointment) => visibleDates.includes(appointment.appointment_date));
-  const listAppointments = appointments.filter((appointment) => includePast || appointment.appointment_date >= today);
+  const matchesStatus = (appointment: Appointment) =>
+    statusFilter === "all" || appointment.status === statusFilter;
+  const calendarAppointments = appointments.filter(
+    (appointment) => visibleDates.includes(appointment.appointment_date) && matchesStatus(appointment),
+  );
+  const listAppointments = appointments.filter(
+    (appointment) => (includePast || appointment.appointment_date >= today) && matchesStatus(appointment),
+  );
   const selectedAppointment = appointments.find((appointment) => appointment.reference === selectedReference);
 
   async function updateStatus(reference: string, status: string) {
@@ -191,6 +199,11 @@ export function OwnerDashboard({ ownerName }: { ownerName: string }) {
     setView(nextView);
     setSelectedReference("");
     if (nextView === "today") setAnchorDate(today);
+  }
+
+  function chooseStatus(nextStatus: StatusFilter) {
+    setStatusFilter(nextStatus);
+    setSelectedReference("");
   }
 
   function moveDate(direction: number) {
@@ -259,12 +272,20 @@ export function OwnerDashboard({ ownerName }: { ownerName: string }) {
           </div>
         )}
 
-        {view !== "availability" && <div className="calendar-legend" aria-label="Appointment status colors">
-          <span className="status status-confirmed">Confirmed</span>
-          <span className="status status-completed">Completed</span>
-          <span className="status status-cancelled">Cancelled</span>
+        {view !== "availability" && <div className="calendar-legend" aria-label="Filter appointments by status">
+          {(["all", "confirmed", "completed", "cancelled"] as StatusFilter[]).map((statusOption) => (
+            <button
+              aria-pressed={statusFilter === statusOption}
+              className={`status-filter ${statusOption === "all" ? "" : `status status-${statusOption}`} ${statusFilter === statusOption ? "selected" : ""}`}
+              key={statusOption}
+              onClick={() => chooseStatus(statusOption)}
+              type="button"
+            >
+              {statusOption[0].toUpperCase() + statusOption.slice(1)}
+            </button>
+          ))}
           <span className="gap-key">Open time</span>
-          <button onClick={() => {
+          <button className="calendar-refresh" onClick={() => {
             setState("loading");
             load().catch(() => setState("error"));
           }}>Refresh</button>
@@ -278,7 +299,8 @@ export function OwnerDashboard({ ownerName }: { ownerName: string }) {
             <div className={`calendar-grid ${view === "week" ? "week-grid" : ""}`}>
               {visibleDates.map((date) => {
                 const dayAppointments = calendarAppointments.filter((appointment) => appointment.appointment_date === date);
-                const gaps = openGaps(dayAppointments);
+                const occupiedAppointments = appointments.filter((appointment) => appointment.appointment_date === date);
+                const gaps = openGaps(occupiedAppointments);
                 return (
                   <section className="calendar-day" key={date}>
                     <header><strong>{dateLabel(date)}</strong><span>{dayAppointments.length} appointment{dayAppointments.length === 1 ? "" : "s"}</span></header>

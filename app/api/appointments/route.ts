@@ -92,7 +92,7 @@ async function ensureTables() {
         CAST(substr(appointment_time, 1, 2) AS INTEGER) * 60 +
           CAST(substr(appointment_time, 4, 2) AS INTEGER),
         CAST(substr(appointment_time, 1, 2) AS INTEGER) * 60 +
-          CAST(substr(appointment_time, 4, 2) AS INTEGER) + duration_minutes
+          CAST(substr(appointment_time, 4, 2) AS INTEGER) + duration_minutes + 15
       FROM appointments
       WHERE status != 'cancelled'
       UNION ALL

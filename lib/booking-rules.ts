@@ -2,6 +2,7 @@ export const OPENING_MINUTES = 9 * 60;
 export const CLOSING_MINUTES = 17 * 60;
 export const START_INTERVAL = 15;
 export const SLOT_INTERVAL = 15;
+export const RESERVATION_GAP = 15;
 
 export function minutesToTime(minutes: number) {
   return `${String(Math.floor(minutes / 60)).padStart(2, "0")}:${String(minutes % 60).padStart(2, "0")}`;
@@ -24,7 +25,7 @@ export function candidateTimes(duration: number) {
 export function occupiedSlots(time: string, duration: number) {
   const start = timeToMinutes(time);
   const slots: string[] = [];
-  for (let minute = start; minute < start + duration; minute += SLOT_INTERVAL) {
+  for (let minute = start; minute < start + duration + RESERVATION_GAP; minute += SLOT_INTERVAL) {
     slots.push(minutesToTime(minute));
   }
   return slots;

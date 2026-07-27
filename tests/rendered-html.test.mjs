@@ -72,25 +72,26 @@ test("offers 15-minute starts within 9 AM to 5 PM", () => {
   assert.equal(artTimes.at(-1), "16:30");
 });
 
-test("blocks the full combined duration of multiple services", () => {
+test("blocks the full combined duration plus a 15-minute reset gap", () => {
   const combinedDuration = 60 + 75 + 30;
   const reserved = occupiedSlots("09:15", combinedDuration);
 
   assert.equal(reserved[0], "09:15");
-  assert.equal(reserved.at(-1), "11:45");
-  assert.equal(reserved.length, 11);
+  assert.equal(reserved.at(-1), "12:00");
+  assert.equal(reserved.length, 12);
   assert.ok(!candidateTimes(combinedDuration).includes("14:30"));
   assert.ok(candidateTimes(combinedDuration).includes("14:15"));
 });
 
 test("removes every start time that would overlap a booking", () => {
   const reserved = occupiedSlots("10:00", 90);
-  assert.deepEqual(reserved, ["10:00", "10:15", "10:30", "10:45", "11:00", "11:15"]);
+  assert.deepEqual(reserved, ["10:00", "10:15", "10:30", "10:45", "11:00", "11:15", "11:30"]);
 
   const available = filterAvailableTimes(60, reserved);
   assert.ok(!available.includes("09:30"));
   assert.ok(!available.includes("10:00"));
   assert.ok(!available.includes("10:30"));
   assert.ok(!available.includes("11:00"));
-  assert.ok(available.includes("11:30"));
+  assert.ok(!available.includes("11:30"));
+  assert.ok(available.includes("11:45"));
 });

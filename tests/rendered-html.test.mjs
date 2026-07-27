@@ -144,5 +144,6 @@ test("prepares a full-stack Cloudflare Pages deployment", async () => {
   assert.match(packageJson.scripts["build:pages"], /prepare-cloudflare-pages/);
   assert.match(prepareScript, /dist", "client", "_worker\.js/);
   assert.match(prepareScript, /dist", "server"/);
+  assert.match(prepareScript, /generatedWranglerConfig/);
   assert.match(auth, /cf-access-authenticated-user-email/);
 });

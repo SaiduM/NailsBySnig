@@ -11,5 +11,6 @@ await mkdir(workerDirectory, { recursive: true });
 await cp(serverDirectory, workerDirectory, { recursive: true });
 await rm(resolve(workerDirectory, "wrangler.json"), { force: true });
 await rm(generatedWranglerConfig, { force: true });
+await rm(resolve(root, ".wrangler", "deploy", "config.json"), { force: true });
 
 console.log("Prepared dist/client for Cloudflare Pages advanced mode.");

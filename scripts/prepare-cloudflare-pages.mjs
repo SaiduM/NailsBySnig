@@ -9,6 +9,10 @@ const generatedWranglerConfig = resolve(serverDirectory, "wrangler.json");
 await rm(workerDirectory, { recursive: true, force: true });
 await mkdir(workerDirectory, { recursive: true });
 await cp(serverDirectory, workerDirectory, { recursive: true });
+// Pages treats `_worker.js` as the Worker module bundle. Keeping the server's
+// CSS folder inside it collides with the public `/assets` directory and causes
+// every browser JS/CSS asset to be omitted from the deployment.
+await rm(resolve(workerDirectory, "assets"), { recursive: true, force: true });
 await rm(resolve(workerDirectory, "wrangler.json"), { force: true });
 await rm(generatedWranglerConfig, { force: true });
 await rm(resolve(root, ".wrangler", "deploy", "config.json"), { force: true });

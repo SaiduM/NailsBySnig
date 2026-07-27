@@ -17,7 +17,7 @@ type Appointment = {
   status: string;
 };
 
-export function OwnerDashboard({ ownerName }: { ownerName: string }) {
+export function OwnerDashboard({ ownerName, signOutPath }: { ownerName: string; signOutPath: string }) {
   const [appointments, setAppointments] = useState<Appointment[]>([]);
   const [includePast, setIncludePast] = useState(false);
   const [state, setState] = useState<"loading" | "ready" | "error">("loading");
@@ -72,7 +72,7 @@ export function OwnerDashboard({ ownerName }: { ownerName: string }) {
     <main className="owner-page">
       <header className="owner-header">
         <Link className="brand" href="/"><span className="brand-mark">NS</span><span>NailsBySnig</span></Link>
-        <div><span>Signed in as {ownerName}</span><Link href="/signout-with-chatgpt?return_to=/">Sign out</Link></div>
+        <div><span>Signed in as {ownerName}</span><Link href={signOutPath}>Sign out</Link></div>
       </header>
       <section className="owner-content">
         <div className="owner-title">

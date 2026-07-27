@@ -125,10 +125,24 @@ test("protects an owner dashboard for appointment tracking and status changes", 
   ]);
   assert.match(ownerAuth, /OWNER_EMAIL/);
   assert.match(ownerAuth, /oai-authenticated-user-email/);
+  assert.match(ownerAuth, /cf-access-authenticated-user-email/);
   assert.match(ownerPage, /getChatGPTUser/);
   assert.match(ownerApi, /ORDER BY appointment_date ASC, appointment_time ASC/);
   assert.match(ownerApi, /DELETE FROM appointment_slots/);
   assert.match(dashboard, /Show past appointments/);
   assert.match(dashboard, /Mark complete/);
   assert.match(dashboard, /Add appointment/);
+});
+
+test("prepares a full-stack Cloudflare Pages deployment", async () => {
+  const [packageText, prepareScript, auth] = await Promise.all([
+    source("package.json"),
+    source("scripts/prepare-cloudflare-pages.mjs"),
+    source("app/chatgpt-auth.ts"),
+  ]);
+  const packageJson = JSON.parse(packageText);
+  assert.match(packageJson.scripts["build:pages"], /prepare-cloudflare-pages/);
+  assert.match(prepareScript, /dist", "client", "_worker\.js/);
+  assert.match(prepareScript, /dist", "server"/);
+  assert.match(auth, /cf-access-authenticated-user-email/);
 });

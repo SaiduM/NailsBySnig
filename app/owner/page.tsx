@@ -20,5 +20,8 @@ export default async function OwnerPage() {
       </main>
     );
   }
-  return <OwnerDashboard ownerName={user.displayName} />;
+  const signOutPath = user.provider === "cloudflare"
+    ? "/cdn-cgi/access/logout"
+    : "/signout-with-chatgpt?return_to=/";
+  return <OwnerDashboard ownerName={user.displayName} signOutPath={signOutPath} />;
 }

@@ -154,6 +154,14 @@ test("links clients to the NailsBySnig Instagram work feed", async () => {
   assert.match(bookingUi, /target="_blank"/);
 });
 
+test("uses a compact two-column service grid in the mobile app", async () => {
+  const styles = await source("app/globals.css");
+  assert.match(styles, /@media \(max-width: 560px\)/);
+  assert.match(styles, /\.service-grid \{ grid-template-columns: repeat\(2, minmax\(0, 1fr\)\)/);
+  assert.match(styles, /\.service-card \{\s*min-width: 0; min-height: 300px/);
+  assert.match(styles, /-webkit-line-clamp: 4/);
+});
+
 test("protects an owner dashboard for appointment tracking and status changes", async () => {
   const [ownerApi, ownerPage, dashboard, ownerAuth, ownerSession, ownerLogin] = await Promise.all([
     source("app/api/owner/appointments/route.ts"),

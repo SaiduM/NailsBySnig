@@ -317,8 +317,22 @@ footer > div { display: flex; justify-content: flex-end; gap: 18px; font-size: 1
   .polish-bottle { transform: scale(.82) rotate(8deg); }
   .section-heading { display: block; }
   .section-heading > p { margin-top: 22px; }
-  .service-grid { grid-template-columns: 1fr; }
-  .service-card { border-right: 0; border-bottom: 1px solid var(--line); min-height: 340px; }
+  .services-section { padding-inline: 16px; }
+  .services-section .section-heading { margin-bottom: 34px; }
+  .service-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 10px; border-top: 0; }
+  .service-card {
+    min-width: 0; min-height: 300px; padding: 14px 12px; border: 1px solid var(--line);
+    background: var(--paper);
+  }
+  .service-card:nth-child(2) { border-right: 1px solid var(--line); }
+  .service-symbol { margin: 16px 0 14px; font-size: 31px; }
+  .service-card h3 { min-height: 48px; margin-bottom: 9px; font-size: 16px; line-height: 1.2; }
+  .service-card > p {
+    display: -webkit-box; overflow: hidden; font-size: 11px; line-height: 1.45;
+    -webkit-box-orient: vertical; -webkit-line-clamp: 4;
+  }
+  .service-meta { padding: 11px 0; font-size: 11px; }
+  .service-card button { min-height: 44px; padding-top: 11px; gap: 6px; font-size: 11px; text-align: left; }
   .booking-form { padding: 45px 18px; }
   .booking-calendar { margin-inline: -4px; padding: 9px; }
   .booking-calendar-weekdays, .booking-calendar-days { gap: 3px; }

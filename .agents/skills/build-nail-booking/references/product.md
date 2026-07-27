@@ -51,3 +51,4 @@ Treat these as editable launch defaults until the owner confirms the final menu.
 - Owner availability controls support full-day and partial-day time off, with blocked slots removed from customer booking.
 - Booking and owner-login submissions have durable hashed-IP throttles; duplicate clients are limited to one active appointment per day and three upcoming appointments.
 - The landing page links to the NailsBySnig Instagram account through a lightweight “See our work” section without storing a duplicate photo gallery.
+- Mobile service browsing uses a compact two-by-two card grid while preserving the four-card desktop row.

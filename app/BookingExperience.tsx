@@ -353,8 +353,8 @@ export function BookingExperience() {
                 <legend><span>4</span> Your details</legend>
                 <div className="field-grid">
                   <label>Full name<input name="name" autoComplete="name" required minLength={2} /></label>
-                  <label>Phone <small>Email or phone required</small><input name="phone" type="tel" autoComplete="tel" /></label>
-                  <label>Email <small>Email or phone required</small><input name="email" type="email" autoComplete="email" /></label>
+                  <label>Phone <small>Required</small><input name="phone" type="tel" autoComplete="tel" required minLength={10} /></label>
+                  <label>Email <small>Required</small><input name="email" type="email" autoComplete="email" required /></label>
                   <label className="full-field">Anything we should know? <small>Optional</small><textarea name="notes" rows={3} placeholder="Nail art ideas, removal needed, or accessibility notes..." /></label>
                 </div>
               </fieldset>

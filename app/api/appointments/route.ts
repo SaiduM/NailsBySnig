@@ -172,8 +172,8 @@ export async function POST(request: Request) {
     if (!bundle || dateError || !candidateTimes(bundle.duration).includes(time)) {
       return Response.json({ error: "Please choose valid services, day, and time." }, { status: 400 });
     }
-    if (name.length < 2 || (!email && !phone) || !isValidEmail(email) || !isValidPhone(phone)) {
-      return Response.json({ error: "Please enter your name and a valid email or phone number." }, { status: 400 });
+    if (name.length < 2 || !email || !phone || !isValidEmail(email) || !isValidPhone(phone)) {
+      return Response.json({ error: "Please enter your name, a valid email, and a valid phone number." }, { status: 400 });
     }
     if (!env.DB) {
       return Response.json({ error: "Booking storage is not connected yet. Please contact the studio." }, { status: 503 });

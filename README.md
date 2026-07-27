@@ -17,7 +17,7 @@ conflict-safe appointment booking and a private owner dashboard.
 - Combined service-duration calculation
 - Required 15-minute turnaround time between appointments
 - Atomic database slot reservation to prevent overlapping or double bookings
-- Client name plus at least one valid contact method: email or phone
+- Client name, valid email, and valid phone number required for every booking
 - Durable Cloudflare D1 appointment and reserved-slot records
 - Booking reference and secure appointment management link
 - Automatic confirmation and client cancellation flow
@@ -153,8 +153,7 @@ Stores:
 - reminder delivery timestamp
 - creation timestamp
 
-Email and phone columns may contain an empty string individually, but the
-booking API requires at least one valid contact method.
+The booking API requires both a valid email address and a valid phone number.
 
 ### `appointment_slots`
 

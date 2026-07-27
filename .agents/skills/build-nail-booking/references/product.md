@@ -45,6 +45,6 @@ Treat these as editable launch defaults until the owner confirms the final menu.
 
 - Installable PWA with home-screen icon, standalone display, offline shell, and platform-specific install guidance.
 - Client cancellation links that release reserved appointment slots.
-- Either email or phone is required for booking; notification delivery supports email, SMS, immediate receipts, and one-day manage/cancel reminders.
+- Both email and phone are required for booking; notification delivery supports email, SMS, immediate receipts, and one-day manage/cancel reminders.
 - Owner dashboard lists upcoming or past appointments and supports completion, cancellation, and manual booking through the public conflict-safe flow.
 - Owner access supports a private password with a signed, secure, 12-hour session.

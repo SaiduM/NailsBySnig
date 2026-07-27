@@ -125,14 +125,20 @@ legend { font-weight: 700; margin-bottom: 17px; }
 legend > span { width: 25px; height: 25px; display: inline-grid; place-items: center; background: var(--ink); color: white; border-radius: 50%; margin-right: 8px; font-size: 11px; }
 .select-wrap select, input, textarea { width: 100%; border: 1px solid var(--line); background: white; padding: 14px; outline: none; }
 select:focus, input:focus, textarea:focus { border-color: var(--orange); box-shadow: 0 0 0 3px rgba(231,94,46,.14); }
-.date-row, .time-row { display: grid; gap: 8px; }
-.date-row { grid-template-columns: repeat(5, 1fr); }
+.time-row { display: grid; gap: 8px; }
 .time-row { grid-template-columns: repeat(4, 1fr); }
-.date-row button, .time-row button { border: 1px solid var(--line); background: white; padding: 12px 7px; min-height: 52px; }
-.date-row button { display: flex; flex-direction: column; align-items: center; gap: 2px; }
-.date-row strong { font-size: 22px; }
-.date-row small, .date-row span { font-size: 10px; text-transform: uppercase; }
-.date-row button.selected, .time-row button.selected { background: var(--ink); color: white; border-color: var(--ink); }
+.time-row button { border: 1px solid var(--line); background: white; padding: 12px 7px; min-height: 52px; }
+.time-row button.selected { background: var(--ink); color: white; border-color: var(--ink); }
+.date-picker { display: grid; grid-template-columns: minmax(180px, .7fr) 1.3fr; gap: 14px; align-items: end; }
+.date-picker label { color: #5d5a55; }
+.date-picker input { color: var(--ink); min-height: 52px; }
+.date-picker > div {
+  min-height: 52px; border: 1px solid var(--line); background: #f8f3e9; padding: 9px 13px;
+  display: flex; flex-direction: column; justify-content: center;
+}
+.date-picker > div strong { font-size: 14px; }
+.date-picker > div span { color: #6a6761; font-size: 10px; margin-top: 3px; }
+.availability-note { border: 1px dashed var(--line); padding: 16px; color: #6a6761; font-size: 13px; margin: 0; }
 .field-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 15px; }
 label { font-size: 12px; font-weight: 700; }
 label input, label textarea { display: block; margin-top: 7px; font-weight: 400; }
@@ -180,7 +186,7 @@ footer > div { display: flex; justify-content: flex-end; gap: 18px; font-size: 1
   .service-grid { grid-template-columns: 1fr; }
   .service-card { border-right: 0; border-bottom: 1px solid var(--line); min-height: 340px; }
   .booking-form { padding: 45px 18px; }
-  .date-row { overflow-x: auto; grid-template-columns: repeat(5, 72px); padding-bottom: 5px; }
+  .date-picker { grid-template-columns: 1fr; }
   .time-row { grid-template-columns: 1fr 1fr; }
   .field-grid { grid-template-columns: 1fr; }
   .full-field { grid-column: auto; }

@@ -1,6 +1,6 @@
 "use client";
 
-import { FormEvent, useMemo, useState } from "react";
+import { FormEvent, useEffect, useMemo, useState } from "react";
 
 const services = [
   {
@@ -37,7 +37,6 @@ const services = [
   },
 ] as const;
 
-const times = ["09:00", "11:00", "13:30", "16:00"];
 type Service = (typeof services)[number];
 
 function dateKey(date: Date) {
@@ -63,29 +62,56 @@ function displayTime(value: string) {
   }).format(new Date(2026, 0, 1, hour, minute));
 }
 
-function nextBookableDates() {
-  const result: string[] = [];
-  const cursor = new Date();
-  cursor.setHours(12, 0, 0, 0);
-  cursor.setDate(cursor.getDate() + 1);
-  while (result.length < 10) {
-    const day = cursor.getDay();
-    if (day >= 2 && day <= 6) result.push(dateKey(cursor));
-    cursor.setDate(cursor.getDate() + 1);
+function bookingWindow() {
+  const today = new Date();
+  today.setHours(12, 0, 0, 0);
+  const minimum = new Date(today);
+  minimum.setDate(minimum.getDate() + 1);
+  while (minimum.getDay() < 2 || minimum.getDay() > 6) {
+    minimum.setDate(minimum.getDate() + 1);
   }
-  return result;
+  const maximum = new Date(today);
+  maximum.setMonth(maximum.getMonth() + 2);
+  return { minimum: dateKey(minimum), maximum: dateKey(maximum) };
 }
 
 export function BookingExperience() {
-  const dates = useMemo(nextBookableDates, []);
+  const window = useMemo(bookingWindow, []);
   const [bookingOpen, setBookingOpen] = useState(false);
   const [serviceId, setServiceId] = useState<string>("signature-gel");
-  const [date, setDate] = useState(dates[0]);
-  const [time, setTime] = useState(times[1]);
+  const [date, setDate] = useState(window.minimum);
+  const [time, setTime] = useState("");
+  const [availableTimes, setAvailableTimes] = useState<string[]>([]);
+  const [availabilityStatus, setAvailabilityStatus] = useState<"loading" | "ready" | "error">("loading");
   const [status, setStatus] = useState<"idle" | "submitting" | "success" | "error">("idle");
   const [message, setMessage] = useState("");
   const [reference, setReference] = useState("");
   const selectedService = services.find((service) => service.id === serviceId) ?? services[0];
+
+  useEffect(() => {
+    const controller = new AbortController();
+    setAvailabilityStatus("loading");
+    setMessage("");
+    fetch(`/api/appointments?date=${encodeURIComponent(date)}&serviceId=${encodeURIComponent(serviceId)}`, {
+      signal: controller.signal,
+    })
+      .then(async (response) => {
+        const data = (await response.json()) as { availableTimes?: string[]; error?: string };
+        if (!response.ok) throw new Error(data.error || "We couldn’t load appointment times.");
+        const nextTimes = data.availableTimes ?? [];
+        setAvailableTimes(nextTimes);
+        setTime((current) => (nextTimes.includes(current) ? current : nextTimes[0] ?? ""));
+        setAvailabilityStatus("ready");
+      })
+      .catch((error) => {
+        if (error instanceof DOMException && error.name === "AbortError") return;
+        setAvailableTimes([]);
+        setTime("");
+        setAvailabilityStatus("error");
+        setMessage(error instanceof Error ? error.message : "We couldn’t load appointment times.");
+      });
+    return () => controller.abort();
+  }, [date, serviceId]);
 
   function openBooking(service?: Service) {
     if (service) setServiceId(service.id);
@@ -258,26 +284,40 @@ export function BookingExperience() {
 
               <fieldset>
                 <legend><span>2</span> Pick a day</legend>
-                <div className="date-row">
-                  {dates.slice(0, 5).map((value) => (
-                    <button className={date === value ? "selected" : ""} type="button" onClick={() => setDate(value)} key={value}>
-                      <small>{displayDate(value).split(",")[0]}</small>
-                      <strong>{new Date(`${value}T12:00:00`).getDate()}</strong>
-                      <span>{new Intl.DateTimeFormat("en-US", { month: "short" }).format(new Date(`${value}T12:00:00`))}</span>
-                    </button>
-                  ))}
+                <div className="date-picker">
+                  <label>
+                    Appointment date
+                    <input
+                      type="date"
+                      value={date}
+                      min={window.minimum}
+                      max={window.maximum}
+                      onChange={(event) => setDate(event.target.value)}
+                      required
+                    />
+                  </label>
+                  <div>
+                    <strong>{displayDate(date)}</strong>
+                    <span>Available Tuesday–Saturday · Book up to 2 months ahead</span>
+                  </div>
                 </div>
               </fieldset>
 
               <fieldset>
                 <legend><span>3</span> Pick a time</legend>
-                <div className="time-row">
-                  {times.map((value) => (
-                    <button className={time === value ? "selected" : ""} type="button" onClick={() => setTime(value)} key={value}>
-                      {displayTime(value)}
-                    </button>
-                  ))}
-                </div>
+                {availabilityStatus === "loading" ? (
+                  <p className="availability-note" role="status">Checking available times…</p>
+                ) : availableTimes.length ? (
+                  <div className="time-row">
+                    {availableTimes.map((value) => (
+                      <button className={time === value ? "selected" : ""} type="button" onClick={() => setTime(value)} key={value}>
+                        {displayTime(value)}
+                      </button>
+                    ))}
+                  </div>
+                ) : (
+                  <p className="availability-note">No times are available for this day. Please choose another date.</p>
+                )}
               </fieldset>
 
               <fieldset>
@@ -291,7 +331,7 @@ export function BookingExperience() {
               </fieldset>
 
               {status === "error" && <p className="form-error" role="alert">{message}</p>}
-              <button className="submit-booking" disabled={status === "submitting"} type="submit">
+              <button className="submit-booking" disabled={status === "submitting" || !time || availabilityStatus !== "ready"} type="submit">
                 {status === "submitting" ? "Saving your appointment…" : "Request appointment"} <span>→</span>
               </button>
               <p className="form-fineprint">No payment is collected today. We&apos;ll contact you to confirm.</p>

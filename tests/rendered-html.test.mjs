@@ -1,6 +1,11 @@
 import assert from "node:assert/strict";
 import { readFile, stat } from "node:fs/promises";
 import test from "node:test";
+import {
+  candidateTimes,
+  filterAvailableTimes,
+  occupiedSlots,
+} from "../lib/booking-rules.ts";
 
 const root = new URL("../", import.meta.url);
 
@@ -53,4 +58,27 @@ test("ships usable app icons and a safe offline shell", async () => {
   assert.match(serviceWorker, /url\.pathname\.startsWith\("\/api\/"\)/);
   assert.doesNotMatch(serviceWorker, /caches\.put\([^)]*\/api\//);
   assert.match(page, /NailsBySnig/);
+});
+
+test("offers half-hour starts within 9 AM to 5 PM", () => {
+  const manicureTimes = candidateTimes(60);
+  assert.equal(manicureTimes[0], "09:00");
+  assert.equal(manicureTimes.at(-1), "16:00");
+  assert.ok(manicureTimes.includes("09:30"));
+  assert.ok(!manicureTimes.includes("16:30"));
+
+  const artTimes = candidateTimes(30);
+  assert.equal(artTimes.at(-1), "16:30");
+});
+
+test("removes every start time that would overlap a booking", () => {
+  const reserved = occupiedSlots("10:00", 90);
+  assert.deepEqual(reserved, ["10:00", "10:15", "10:30", "10:45", "11:00", "11:15"]);
+
+  const available = filterAvailableTimes(60, reserved);
+  assert.ok(!available.includes("09:30"));
+  assert.ok(!available.includes("10:00"));
+  assert.ok(!available.includes("10:30"));
+  assert.ok(!available.includes("11:00"));
+  assert.ok(available.includes("11:30"));
 });

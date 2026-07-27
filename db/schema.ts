@@ -1,4 +1,4 @@
-import { integer, sqliteTable, text, uniqueIndex } from "drizzle-orm/sqlite-core";
+import { index, integer, primaryKey, sqliteTable, text, uniqueIndex } from "drizzle-orm/sqlite-core";
 
 export const appointments = sqliteTable(
   "appointments",
@@ -20,5 +20,18 @@ export const appointments = sqliteTable(
   },
   (table) => [
     uniqueIndex("appointments_slot_idx").on(table.appointmentDate, table.appointmentTime),
+  ],
+);
+
+export const appointmentSlots = sqliteTable(
+  "appointment_slots",
+  {
+    appointmentDate: text("appointment_date").notNull(),
+    slotTime: text("slot_time").notNull(),
+    appointmentReference: text("appointment_reference").notNull(),
+  },
+  (table) => [
+    primaryKey({ columns: [table.appointmentDate, table.slotTime] }),
+    index("appointment_slots_reference_idx").on(table.appointmentReference),
   ],
 );

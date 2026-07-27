@@ -25,9 +25,10 @@ Treat these as editable launch defaults until the owner confirms the final menu.
 ## Operating defaults
 
 - Time zone: America/Phoenix.
-- Booking window: the next 21 days.
+- Booking window: tomorrow through two calendar months ahead.
 - Available days: Tuesday through Saturday.
-- Available start times: 9:00 AM, 11:00 AM, 1:30 PM, and 4:00 PM.
+- Operating hours: 9:00 AM–5:00 PM, with appointment starts every 30 minutes when the selected service can finish by 5:00 PM.
+- Conflict protection: reserve every 15-minute segment of a service in one atomic database operation so overlapping appointments cannot both succeed.
 - Appointments begin as `pending` so the studio can confirm them manually.
 
 ## Later roadmap

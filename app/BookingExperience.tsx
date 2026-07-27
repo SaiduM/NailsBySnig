@@ -240,6 +240,7 @@ export function BookingExperience() {
         </a>
         <nav aria-label="Main navigation">
           <a href="#services">Services</a>
+          <a href="#work">Our work</a>
           <a href="#studio">The studio</a>
           <button className="header-book" onClick={() => openBooking()}>Book now</button>
         </nav>
@@ -296,6 +297,29 @@ export function BookingExperience() {
               </button>
             </article>
           ))}
+        </div>
+      </section>
+
+      <section className="work-section" id="work">
+        <div className="work-copy">
+          <p className="eyebrow">Fresh from the studio</p>
+          <h2>See what we&apos;ve been <em>creating.</em></h2>
+          <p>Our newest sets, colors, and nail-art ideas live on Instagram—follow along for inspiration before your appointment.</p>
+          <a
+            className="instagram-action"
+            href="https://www.instagram.com/nailsbysnig/"
+            rel="noreferrer"
+            target="_blank"
+          >
+            See our work on Instagram <span>↗</span>
+          </a>
+          <strong>@nailsbysnig</strong>
+        </div>
+        <div className="work-art" aria-label="Decorative nail art preview">
+          <span className="nail-swatch swatch-one">✦</span>
+          <span className="nail-swatch swatch-two">NS</span>
+          <span className="nail-swatch swatch-three">◒</span>
+          <p>follow for<br /><em>fresh sets</em></p>
         </div>
       </section>
 
@@ -421,7 +445,7 @@ export function BookingExperience() {
       <footer>
         <a className="brand" href="#top"><span className="brand-mark">NS</span><span>NailsBySnig</span></a>
         <p>Thoughtful nails, simply booked.</p>
-        <div><a href="#services">Services</a><a href="#booking">Book</a><span>Tue–Sat · Phoenix, AZ</span></div>
+        <div><a href="#services">Services</a><a href="https://www.instagram.com/nailsbysnig/" rel="noreferrer" target="_blank">Instagram</a><a href="#booking">Book</a><span>Tue–Sat · Phoenix, AZ</span></div>
       </footer>
     </main>
   );

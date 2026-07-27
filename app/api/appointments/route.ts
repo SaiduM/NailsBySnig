@@ -1,6 +1,7 @@
 import { env } from "cloudflare:workers";
 import { candidateTimes, filterAvailableTimes, occupiedSlots } from "../../../lib/booking-rules";
 import { sendAppointmentNotice } from "../../../lib/notifications";
+import { checkRateLimit } from "../../../lib/rate-limit";
 
 export const runtime = "edge";
 
@@ -79,6 +80,7 @@ async function ensureTables() {
       client_name TEXT NOT NULL,
       client_email TEXT NOT NULL,
       client_phone TEXT NOT NULL,
+      client_phone_key TEXT NOT NULL DEFAULT '',
       notes TEXT NOT NULL DEFAULT '',
       status TEXT NOT NULL DEFAULT 'confirmed',
       cancellation_token TEXT,
@@ -129,6 +131,17 @@ async function ensureTables() {
   if (!names.has("reminder_sent_at")) {
     await env.DB.prepare("ALTER TABLE appointments ADD COLUMN reminder_sent_at TEXT").run();
   }
+  if (!names.has("client_phone_key")) {
+    await env.DB.prepare("ALTER TABLE appointments ADD COLUMN client_phone_key TEXT NOT NULL DEFAULT ''").run();
+  }
+  await env.DB.prepare(`UPDATE appointments SET client_phone_key =
+    replace(replace(replace(replace(replace(client_phone, '(', ''), ')', ''), '-', ''), ' ', ''), '+', '')
+    WHERE client_phone_key = ''`).run();
+  await env.DB.prepare(`CREATE UNIQUE INDEX IF NOT EXISTS appointments_client_email_date_idx
+    ON appointments(appointment_date, client_email) WHERE status != 'cancelled'`).run();
+  await env.DB.prepare(`CREATE UNIQUE INDEX IF NOT EXISTS appointments_client_phone_date_idx
+    ON appointments(appointment_date, client_phone_key)
+    WHERE status != 'cancelled' AND client_phone_key != ''`).run();
   await env.DB.prepare(
     "CREATE UNIQUE INDEX IF NOT EXISTS appointments_cancellation_token_idx ON appointments(cancellation_token)",
   ).run();
@@ -179,17 +192,49 @@ export async function POST(request: Request) {
       return Response.json({ error: "Booking storage is not connected yet. Please contact the studio." }, { status: 503 });
     }
 
+    const rateLimit = await checkRateLimit(request, "booking-create", 8, 15 * 60);
+    if (!rateLimit.allowed) {
+      return Response.json(
+        { error: "Too many booking attempts. Please wait a few minutes and try again." },
+        { status: 429, headers: { "retry-after": String(rateLimit.retryAfter) } },
+      );
+    }
+
     await ensureTables();
+    const phoneKey = phone.replace(/\D/g, "");
+    const duplicate = await env.DB.prepare(`SELECT reference FROM appointments
+      WHERE appointment_date = ? AND status != 'cancelled'
+        AND (client_email = ? OR client_phone_key = ?)
+      LIMIT 1`)
+      .bind(date, email, phoneKey)
+      .first<{ reference: string }>();
+    if (duplicate) {
+      return Response.json(
+        { error: "You already have an appointment on this date. Use your existing confirmation link to manage it." },
+        { status: 409 },
+      );
+    }
+    const futureBookings = await env.DB.prepare(`SELECT COUNT(*) AS total FROM appointments
+      WHERE appointment_date >= ? AND status != 'cancelled'
+        AND (client_email = ? OR client_phone_key = ?)`)
+      .bind(phoenixDateKey(), email, phoneKey)
+      .first<{ total: number }>();
+    if ((futureBookings?.total ?? 0) >= 3) {
+      return Response.json(
+        { error: "You already have three upcoming appointments. Please contact the studio to book another." },
+        { status: 409 },
+      );
+    }
 
     const reference = `NBS-${crypto.randomUUID().slice(0, 8).toUpperCase()}`;
     const cancellationToken = crypto.randomUUID();
     const bookingStatements = [
       env.DB.prepare(`INSERT INTO appointments (
         reference, service_id, service_name, duration_minutes, price_dollars,
-        appointment_date, appointment_time, client_name, client_email, client_phone, notes,
+        appointment_date, appointment_time, client_name, client_email, client_phone, client_phone_key, notes,
         cancellation_token, status
-      ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 'confirmed')`)
-        .bind(reference, bundle.ids.join(","), bundle.name, bundle.duration, bundle.price, date, time, name, email, phone, notes, cancellationToken),
+      ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 'confirmed')`)
+        .bind(reference, bundle.ids.join(","), bundle.name, bundle.duration, bundle.price, date, time, name, email, phone, phoneKey, notes, cancellationToken),
       ...occupiedSlots(time, bundle.duration).map((slot) =>
         env.DB.prepare(
           "INSERT INTO appointment_slots (appointment_date, slot_time, appointment_reference) VALUES (?, ?, ?)",
@@ -213,6 +258,15 @@ export async function POST(request: Request) {
     return Response.json({ reference, cancelUrl, notificationSent }, { status: 201 });
   } catch (error) {
     const message = error instanceof Error ? error.message : "";
+    if (
+      message.includes("appointments.appointment_date, appointments.client_email") ||
+      message.includes("appointments.appointment_date, appointments.client_phone_key")
+    ) {
+      return Response.json(
+        { error: "You already have an appointment on this date. Use your existing confirmation link to manage it." },
+        { status: 409 },
+      );
+    }
     if (message.includes("UNIQUE constraint failed")) {
       return Response.json({ error: "That appointment overlaps with a time that was just booked. Please choose another slot." }, { status: 409 });
     }

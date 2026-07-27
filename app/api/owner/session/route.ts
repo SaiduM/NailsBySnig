@@ -4,10 +4,18 @@ import {
   ownerCookieOptions,
   verifyOwnerPassword,
 } from "../../../../lib/owner-session";
+import { checkRateLimit } from "../../../../lib/rate-limit";
 
 export const runtime = "edge";
 
 export async function POST(request: Request) {
+  const rateLimit = await checkRateLimit(request, "owner-login", 5, 15 * 60);
+  if (!rateLimit.allowed) {
+    return Response.json(
+      { error: "Too many sign-in attempts. Please wait before trying again." },
+      { status: 429, headers: { "retry-after": String(rateLimit.retryAfter) } },
+    );
+  }
   const contentType = request.headers.get("content-type") ?? "";
   const expectsJson = contentType.includes("application/json");
   const password = expectsJson

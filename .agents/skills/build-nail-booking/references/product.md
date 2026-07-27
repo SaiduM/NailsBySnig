@@ -37,7 +37,7 @@ Treat these as editable launch defaults until the owner confirms the final menu.
 ## Later roadmap
 
 1. Configure production email/SMS provider credentials and daily reminder scheduling.
-3. Calendar sync and configurable availability.
+3. Calendar sync.
 4. Deposits and cancellation policy acceptance.
 5. Returning-client convenience.
 
@@ -48,3 +48,6 @@ Treat these as editable launch defaults until the owner confirms the final menu.
 - Both email and phone are required for booking; notification delivery supports email, SMS, immediate receipts, and one-day manage/cancel reminders.
 - Owner dashboard provides Today, Day, Week, and List views with open-time gaps, color-coded statuses, quick details, completion, cancellation, and manual booking.
 - Owner access supports a private password with a signed, secure, 12-hour session.
+- Owner availability controls support full-day and partial-day time off, with blocked slots removed from customer booking.
+- Booking and owner-login submissions have durable hashed-IP throttles; duplicate clients are limited to one active appointment per day and three upcoming appointments.
+- The landing page links to the NailsBySnig Instagram account through a lightweight “See our work” section without storing a duplicate photo gallery.

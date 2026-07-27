@@ -126,6 +126,34 @@ test("requires email and phone, automatically confirms bookings, and supports re
   assert.match(bookingUi, /View or cancel appointment/);
 });
 
+test("limits abusive requests and duplicate client bookings", async () => {
+  const [bookingApi, ownerSession, rateLimit] = await Promise.all([
+    source("app/api/appointments/route.ts"),
+    source("app/api/owner/session/route.ts"),
+    source("lib/rate-limit.ts"),
+  ]);
+
+  assert.match(rateLimit, /crypto\.subtle\.digest\("SHA-256"/);
+  assert.match(rateLimit, /CREATE TABLE IF NOT EXISTS request_limits/);
+  assert.match(rateLimit, /request_count = request_count \+ 1/);
+  assert.match(bookingApi, /checkRateLimit\(request, "booking-create", 8, 15 \* 60\)/);
+  assert.match(ownerSession, /checkRateLimit\(request, "owner-login", 5, 15 \* 60\)/);
+  assert.match(bookingApi, /client_phone_key/);
+  assert.match(bookingApi, /You already have an appointment on this date/);
+  assert.match(bookingApi, /futureBookings/);
+  assert.match(bookingApi, />= 3/);
+  assert.match(bookingApi, /status: 429/);
+});
+
+test("links clients to the NailsBySnig Instagram work feed", async () => {
+  const bookingUi = await source("app/BookingExperience.tsx");
+  assert.match(bookingUi, /id="work"/);
+  assert.match(bookingUi, /See our work on Instagram/);
+  assert.match(bookingUi, /https:\/\/www\.instagram\.com\/nailsbysnig\//);
+  assert.match(bookingUi, /@nailsbysnig/);
+  assert.match(bookingUi, /target="_blank"/);
+});
+
 test("protects an owner dashboard for appointment tracking and status changes", async () => {
   const [ownerApi, ownerPage, dashboard, ownerAuth, ownerSession, ownerLogin] = await Promise.all([
     source("app/api/owner/appointments/route.ts"),

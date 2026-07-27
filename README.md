@@ -18,6 +18,9 @@ conflict-safe appointment booking and a private owner dashboard.
 - Combined service-duration calculation
 - Required 15-minute turnaround time between appointments
 - Atomic database slot reservation to prevent overlapping or double bookings
+- Durable IP-based throttling for booking and owner-login requests
+- Duplicate-client protection: one active appointment per day and no more than
+  three upcoming appointments per email or phone number
 - Client name, valid email, and valid phone number required for every booking
 - Durable Cloudflare D1 appointment and reserved-slot records
 - Booking reference and secure appointment management link
@@ -33,6 +36,8 @@ conflict-safe appointment booking and a private owner dashboard.
   cancellations
 - Service prices remain stored for future use but are temporarily hidden from
   customer and owner interfaces
+- Instagram-first “See our work” section linking to
+  [@nailsbysnig](https://www.instagram.com/nailsbysnig/)
 
 ## Production readiness
 
@@ -52,8 +57,6 @@ These should be completed before promoting the website broadly.
 - [ ] Add a privacy notice explaining how client contact and appointment data is
       stored and used.
 - [ ] Confirm and publish the cancellation/no-show policy.
-- [ ] Add rate limiting or bot protection to public booking and owner-login
-      requests.
 - [ ] Perform a real production booking test using an external email address and
       phone number before announcing the site.
 
@@ -150,6 +153,7 @@ Stores:
 - total duration and price
 - appointment date and start time
 - client name, email, and phone
+- normalized phone key used only for duplicate-booking protection
 - client notes
 - appointment status
 - cancellation token
@@ -163,6 +167,12 @@ The booking API requires both a valid email address and a valid phone number.
 Stores every reserved 15-minute segment for an appointment, including the
 15-minute turnaround period. Its date-and-time primary key prevents two
 appointments from reserving the same segment.
+
+### `request_limits`
+
+Stores short-lived request counters for booking submissions and owner sign-in
+attempts. Network addresses are SHA-256 hashed before storage; raw addresses
+are not written to D1.
 
 There is no separate client table yet. Repeated client details are stored with
 each appointment.

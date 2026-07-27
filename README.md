@@ -12,6 +12,7 @@ conflict-safe appointment booking and a private owner dashboard.
 - Responsive business website and installable Progressive Web App (PWA)
 - Multiple services in one appointment
 - Booking from tomorrow through the next two calendar months
+- One-tap mobile booking calendar with closed days visibly unavailable
 - Tuesday–Saturday availability from 9:00 AM to 5:00 PM
 - Available start times every 15 minutes
 - Combined service-duration calculation
@@ -25,6 +26,8 @@ conflict-safe appointment booking and a private owner dashboard.
 - Owner Today, Day, Week, and List calendar views with open-time gaps,
   color-coded statuses, and quick appointment details
 - Owner actions for completion, cancellation, and manual booking
+- Owner controls for full-day time off, vacations, breaks, and partial-day
+  calendar blocks
 - Encrypted owner password and signed 12-hour owner sessions
 - Email/SMS delivery code for booking receipts, reminders, confirmations, and
   cancellations
@@ -46,8 +49,6 @@ These should be completed before promoting the website broadly.
 - [ ] Configure SMS delivery and register the sending phone number if text
       messages are required.
 - [ ] Schedule the protected reminder endpoint to run once per day.
-- [ ] Add owner controls for closed dates, vacations, and manually blocked time.
-      Availability is currently fixed to Tuesday–Saturday, 9:00 AM–5:00 PM.
 - [ ] Add a privacy notice explaining how client contact and appointment data is
       stored and used.
 - [ ] Confirm and publish the cancellation/no-show policy.

@@ -1,6 +1,7 @@
 "use client";
 
 import { FormEvent, useEffect, useMemo, useState } from "react";
+import { BookingCalendar } from "./BookingCalendar";
 
 const services = [
   {
@@ -39,11 +40,41 @@ const services = [
 
 type Service = (typeof services)[number];
 
-function dateKey(date: Date) {
-  const year = date.getFullYear();
-  const month = String(date.getMonth() + 1).padStart(2, "0");
-  const day = String(date.getDate()).padStart(2, "0");
-  return `${year}-${month}-${day}`;
+function addDays(value: string, amount: number) {
+  const date = new Date(`${value}T12:00:00Z`);
+  date.setUTCDate(date.getUTCDate() + amount);
+  return date.toISOString().slice(0, 10);
+}
+
+function addMonths(value: string, amount: number) {
+  const date = new Date(`${value}T12:00:00Z`);
+  date.setUTCMonth(date.getUTCMonth() + amount);
+  return date.toISOString().slice(0, 10);
+}
+
+function phoenixToday() {
+  const parts = new Intl.DateTimeFormat("en-CA", {
+    timeZone: "America/Phoenix",
+    year: "numeric",
+    month: "2-digit",
+    day: "2-digit",
+  }).formatToParts(new Date());
+  const value = Object.fromEntries(parts.map((part) => [part.type, part.value]));
+  return `${value.year}-${value.month}-${value.day}`;
+}
+
+function isBusinessDay(value: string) {
+  const day = new Date(`${value}T12:00:00Z`).getUTCDay();
+  return day >= 2 && day <= 6;
+}
+
+function nextBookableDate(start: string, maximum: string, closedDates: string[]) {
+  let candidate = start;
+  while (candidate <= maximum) {
+    if (isBusinessDay(candidate) && !closedDates.includes(candidate)) return candidate;
+    candidate = addDays(candidate, 1);
+  }
+  return start;
 }
 
 function displayDate(value: string) {
@@ -63,20 +94,13 @@ function displayTime(value: string) {
 }
 
 function bookingWindow() {
-  const today = new Date();
-  today.setHours(12, 0, 0, 0);
-  const minimum = new Date(today);
-  minimum.setDate(minimum.getDate() + 1);
-  while (minimum.getDay() < 2 || minimum.getDay() > 6) {
-    minimum.setDate(minimum.getDate() + 1);
-  }
-  const maximum = new Date(today);
-  maximum.setMonth(maximum.getMonth() + 2);
-  return { minimum: dateKey(minimum), maximum: dateKey(maximum) };
+  const today = phoenixToday();
+  const maximum = addMonths(today, 2);
+  return { minimum: nextBookableDate(addDays(today, 1), maximum, []), maximum };
 }
 
 export function BookingExperience() {
-  const window = useMemo(bookingWindow, []);
+  const window = useMemo(() => bookingWindow(), []);
   const [bookingOpen, setBookingOpen] = useState(false);
   const [serviceIds, setServiceIds] = useState<string[]>(["signature-gel"]);
   const [date, setDate] = useState(window.minimum);
@@ -87,19 +111,36 @@ export function BookingExperience() {
   const [message, setMessage] = useState("");
   const [reference, setReference] = useState("");
   const [cancelUrl, setCancelUrl] = useState("");
+  const [closedDates, setClosedDates] = useState<string[]>([]);
   const selectedServices = services.filter((service) => serviceIds.includes(service.id));
   const totalDuration = selectedServices.reduce((total, service) => total + service.duration, 0);
 
   useEffect(() => {
     const controller = new AbortController();
+    const query = new URLSearchParams({ from: window.minimum, to: window.maximum });
+    fetch(`/api/availability?${query.toString()}`, { signal: controller.signal })
+      .then(async (response) => {
+        const data = await response.json() as { closedDates?: string[] };
+        if (!response.ok) throw new Error("Closed dates could not be loaded.");
+        const nextClosedDates = data.closedDates ?? [];
+        setClosedDates(nextClosedDates);
+        setDate((current) =>
+          nextClosedDates.includes(current)
+            ? nextBookableDate(window.minimum, window.maximum, nextClosedDates)
+            : current,
+        );
+      })
+      .catch((error) => {
+        if (error instanceof DOMException && error.name === "AbortError") return;
+      });
+    return () => controller.abort();
+  }, [window.maximum, window.minimum]);
+
+  useEffect(() => {
+    const controller = new AbortController();
     if (!serviceIds.length) {
-      setAvailableTimes([]);
-      setTime("");
-      setAvailabilityStatus("ready");
       return () => controller.abort();
     }
-    setAvailabilityStatus("loading");
-    setMessage("");
     const query = new URLSearchParams({ date });
     serviceIds.forEach((serviceId) => query.append("serviceId", serviceId));
     fetch(`/api/appointments?${query.toString()}`, {
@@ -124,7 +165,11 @@ export function BookingExperience() {
   }, [date, serviceIds]);
 
   function openBooking(service?: Service) {
-    if (service) setServiceIds([service.id]);
+    if (service) {
+      setServiceIds([service.id]);
+      setAvailabilityStatus("loading");
+      setTime("");
+    }
     setBookingOpen(true);
     setStatus("idle");
     requestAnimationFrame(() =>
@@ -133,11 +178,25 @@ export function BookingExperience() {
   }
 
   function toggleService(serviceId: string) {
-    setServiceIds((current) =>
-      current.includes(serviceId)
-        ? current.filter((id) => id !== serviceId)
-        : [...current, serviceId],
-    );
+    const nextServiceIds = serviceIds.includes(serviceId)
+      ? serviceIds.filter((id) => id !== serviceId)
+      : [...serviceIds, serviceId];
+    setServiceIds(nextServiceIds);
+    setMessage("");
+    if (!nextServiceIds.length) {
+      setAvailableTimes([]);
+      setTime("");
+      setAvailabilityStatus("ready");
+    } else {
+      setAvailabilityStatus("loading");
+    }
+  }
+
+  function chooseDate(nextDate: string) {
+    setDate(nextDate);
+    setTime("");
+    setMessage("");
+    setAvailabilityStatus("loading");
   }
 
   async function submitBooking(event: FormEvent<HTMLFormElement>) {
@@ -313,23 +372,13 @@ export function BookingExperience() {
 
               <fieldset>
                 <legend><span>2</span> Pick a day</legend>
-                <div className="date-picker">
-                  <label>
-                    Appointment date
-                    <input
-                      type="date"
-                      value={date}
-                      min={window.minimum}
-                      max={window.maximum}
-                      onChange={(event) => setDate(event.target.value)}
-                      required
-                    />
-                  </label>
-                  <div>
-                    <strong>{displayDate(date)}</strong>
-                    <span>Available Tuesday–Saturday · Book up to 2 months ahead</span>
-                  </div>
-                </div>
+                <BookingCalendar
+                  closedDates={closedDates}
+                  maximum={window.maximum}
+                  minimum={window.minimum}
+                  onChange={chooseDate}
+                  value={date}
+                />
               </fieldset>
 
               <fieldset>

@@ -145,15 +145,20 @@ select:focus, input:focus, textarea:focus { border-color: var(--orange); box-sha
 .time-row { grid-template-columns: repeat(4, 1fr); }
 .time-row button { border: 1px solid var(--line); background: white; padding: 12px 7px; min-height: 52px; }
 .time-row button.selected { background: var(--ink); color: white; border-color: var(--ink); }
-.date-picker { display: grid; grid-template-columns: minmax(180px, .7fr) 1.3fr; gap: 14px; align-items: end; }
-.date-picker label { color: #5d5a55; }
-.date-picker input { color: var(--ink); min-height: 52px; }
-.date-picker > div {
-  min-height: 52px; border: 1px solid var(--line); background: #f8f3e9; padding: 9px 13px;
-  display: flex; flex-direction: column; justify-content: center;
-}
-.date-picker > div strong { font-size: 14px; }
-.date-picker > div span { color: #6a6761; font-size: 10px; margin-top: 3px; }
+.booking-calendar { border: 1px solid var(--line); background: white; padding: 14px; }
+.booking-calendar-header { display: grid; grid-template-columns: 44px 1fr 44px; align-items: center; gap: 8px; margin-bottom: 12px; }
+.booking-calendar-header strong { text-align: center; font-size: 17px; }
+.booking-calendar-header button { min-height: 44px; border: 1px solid var(--line); background: var(--cream); font-size: 18px; }
+.booking-calendar-header button:disabled { opacity: .3; }
+.booking-calendar-weekdays, .booking-calendar-days { display: grid; grid-template-columns: repeat(7, 1fr); gap: 5px; }
+.booking-calendar-weekdays span { padding: 6px 0; text-align: center; color: #777169; font-size: 10px; font-weight: 800; }
+.booking-calendar-days button { position: relative; min-width: 0; min-height: 48px; border: 1px solid transparent; background: var(--cream); font-weight: 700; }
+.booking-calendar-days button:hover:not(:disabled) { border-color: var(--orange); }
+.booking-calendar-days button.selected { background: var(--ink); color: white; }
+.booking-calendar-days button:disabled { color: #aaa59d; background: #f6f4ef; cursor: not-allowed; }
+.booking-calendar-days button.outside { opacity: 0; }
+.booking-calendar-days small { display: block; font-size: 7px; font-weight: 700; }
+.booking-calendar > p { margin: 13px 0 0; color: #6a6761; font-size: 11px; text-align: center; }
 .availability-note { border: 1px dashed var(--line); padding: 16px; color: #6a6761; font-size: 13px; margin: 0; }
 .field-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 15px; }
 label { font-size: 12px; font-weight: 700; }
@@ -246,6 +251,22 @@ textarea { resize: vertical; }
 .appointment-actions { display: flex; flex-direction: column; gap: 8px; }
 .appointment-actions button { min-width: 115px; border: 0; padding: 10px 13px; background: var(--ink); color: white; font-weight: 700; }
 .appointment-actions .danger { background: transparent; color: #a92e16; border: 1px solid #a92e16; }
+.availability-manager { display: grid; grid-template-columns: minmax(300px, .85fr) minmax(340px, 1.15fr); gap: 20px; }
+.availability-form-card, .availability-list-card { border: 1px solid var(--line); background: var(--paper); padding: clamp(22px, 4vw, 38px); }
+.availability-form-card h2, .availability-list-card h2 { margin: 0 0 12px; font-size: 34px; }
+.availability-form-card > p { color: #6a6761; line-height: 1.55; }
+.availability-form-card form { display: grid; gap: 16px; margin-top: 24px; }
+.availability-form-card select { display: block; width: 100%; margin-top: 7px; padding: 14px; border: 1px solid var(--line); background: white; }
+.availability-form-card form > button { border: 0; background: var(--orange); color: white; padding: 15px; font-weight: 700; }
+.availability-form-card form > button:disabled { opacity: .6; }
+.availability-check { display: flex; align-items: center; gap: 10px; padding: 13px; border: 1px solid var(--line); background: var(--cream); }
+.availability-check input { width: auto; margin: 0; }
+.availability-time-row { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+.availability-blocks { display: grid; gap: 9px; margin-top: 20px; }
+.availability-blocks article { display: flex; justify-content: space-between; align-items: center; gap: 15px; border: 1px solid var(--line); background: var(--cream); padding: 14px; }
+.availability-blocks article div { display: grid; gap: 4px; }
+.availability-blocks article span, .availability-blocks article small { color: #6a6761; font-size: 11px; }
+.availability-blocks article button { border: 1px solid #a92e16; background: transparent; color: #a92e16; padding: 8px 10px; font-weight: 700; }
 
 footer { padding: 45px clamp(24px, 5vw, 76px); display: grid; grid-template-columns: 1fr 1fr 1fr; align-items: center; gap: 20px; border-top: 1px solid var(--line); }
 footer > p { text-align: center; margin: 0; color: #6a6761; font-size: 13px; }
@@ -258,6 +279,7 @@ footer > div { display: flex; justify-content: flex-end; gap: 18px; font-size: 1
   .service-grid { grid-template-columns: 1fr 1fr; }
   .service-card:nth-child(2) { border-right: 0; }
   .studio-section, .booking-shell { grid-template-columns: 1fr; }
+  .availability-manager { grid-template-columns: 1fr; }
   .booking-summary { padding: 60px 7vw; }
   footer { grid-template-columns: 1fr; text-align: center; }
   footer > p { text-align: center; }
@@ -278,7 +300,9 @@ footer > div { display: flex; justify-content: flex-end; gap: 18px; font-size: 1
   .service-grid { grid-template-columns: 1fr; }
   .service-card { border-right: 0; border-bottom: 1px solid var(--line); min-height: 340px; }
   .booking-form { padding: 45px 18px; }
-  .date-picker { grid-template-columns: 1fr; }
+  .booking-calendar { margin-inline: -4px; padding: 9px; }
+  .booking-calendar-weekdays, .booking-calendar-days { gap: 3px; }
+  .booking-calendar-days button { min-height: 44px; padding: 3px 0; font-size: 12px; }
   .time-row { grid-template-columns: 1fr 1fr; }
   .field-grid { grid-template-columns: 1fr; }
   .service-choice-grid { grid-template-columns: 1fr; }
@@ -293,6 +317,7 @@ footer > div { display: flex; justify-content: flex-end; gap: 18px; font-size: 1
   .appointment-card { grid-template-columns: 1fr; }
   .appointment-when { border-right: 0; border-bottom: 1px solid var(--line); padding-bottom: 13px; }
   .appointment-actions { flex-direction: row; flex-wrap: wrap; }
+  .availability-time-row { grid-template-columns: 1fr; }
 }
 
 @media (prefers-reduced-motion: reduce) {

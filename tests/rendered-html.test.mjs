@@ -6,6 +6,7 @@ import {
   filterAvailableTimes,
   occupiedSlots,
 } from "../lib/booking-rules.ts";
+import { blockedSlots } from "../lib/availability.ts";
 
 const root = new URL("../", import.meta.url);
 
@@ -83,6 +84,12 @@ test("blocks the full combined duration plus a 15-minute reset gap", () => {
   assert.ok(candidateTimes(combinedDuration).includes("14:15"));
 });
 
+test("turns owner time off into conflict-safe 15-minute reservations", () => {
+  assert.deepEqual(blockedSlots("09:30", "10:30"), ["09:30", "09:45", "10:00", "10:15"]);
+  assert.equal(blockedSlots("08:45", "10:00").length, 0);
+  assert.equal(blockedSlots("10:00", "09:45").length, 0);
+});
+
 test("removes every start time that would overlap a booking", () => {
   const reserved = occupiedSlots("10:00", 90);
   assert.deepEqual(reserved, ["10:00", "10:15", "10:30", "10:45", "11:00", "11:15", "11:30"]);
@@ -135,7 +142,7 @@ test("protects an owner dashboard for appointment tracking and status changes", 
   assert.match(ownerApi, /ORDER BY appointment_date ASC, appointment_time ASC/);
   assert.match(ownerApi, /DELETE FROM appointment_slots/);
   assert.match(dashboard, /Show past appointments/);
-  assert.match(dashboard, /\["today", "day", "week", "list"\]/);
+  assert.match(dashboard, /\["today", "day", "week", "list", "availability"\]/);
   assert.match(dashboard, /openGaps/);
   assert.match(dashboard, /Quick details/);
   assert.match(dashboard, /Appointment status colors/);
@@ -146,6 +153,28 @@ test("protects an owner dashboard for appointment tracking and status changes", 
   assert.match(ownerSession, /crypto\.subtle\.sign/);
   assert.match(ownerLogin, /Owner password/);
   assert.match(ownerPage, /verifyOwnerSession/);
+});
+
+test("provides owner time-off controls and a one-tap customer calendar", async () => {
+  const [ownerAvailabilityApi, ownerAvailability, availabilityApi, bookingCalendar, bookingUi] = await Promise.all([
+    source("app/api/owner/availability/route.ts"),
+    source("app/owner/OwnerAvailability.tsx"),
+    source("app/api/availability/route.ts"),
+    source("app/BookingCalendar.tsx"),
+    source("app/BookingExperience.tsx"),
+  ]);
+
+  assert.match(ownerAvailabilityApi, /BLOCK:\${id}/);
+  assert.match(ownerAvailabilityApi, /INSERT INTO appointment_slots/);
+  assert.match(ownerAvailabilityApi, /DELETE FROM appointment_slots/);
+  assert.match(ownerAvailability, /Block the full day/);
+  assert.match(ownerAvailability, /That time overlaps an appointment or another blocked period|Block time/);
+  assert.match(availabilityApi, /closedDates/);
+  assert.match(bookingCalendar, /Appointment calendar/);
+  assert.match(bookingCalendar, /closedDates\.includes/);
+  assert.match(bookingCalendar, /Phoenix time/);
+  assert.match(bookingUi, /<BookingCalendar/);
+  assert.doesNotMatch(bookingUi, /type="date"/);
 });
 
 test("prepares a full-stack Cloudflare Pages deployment", async () => {

@@ -2,6 +2,7 @@
 
 import Link from "next/link";
 import { useCallback, useEffect, useMemo, useState } from "react";
+import { OwnerAvailability } from "./OwnerAvailability";
 
 type Appointment = {
   reference: string;
@@ -17,7 +18,7 @@ type Appointment = {
   status: string;
 };
 
-type CalendarView = "today" | "day" | "week" | "list";
+type CalendarView = "today" | "day" | "week" | "list" | "availability";
 type Gap = { start: string; end: string };
 
 const OPEN_MINUTES = 9 * 60;
@@ -221,7 +222,7 @@ export function OwnerDashboard({ ownerName }: { ownerName: string }) {
         </div>
 
         <div className="calendar-view-tabs" role="tablist" aria-label="Calendar view">
-          {(["today", "day", "week", "list"] as CalendarView[]).map((option) => (
+          {(["today", "day", "week", "list", "availability"] as CalendarView[]).map((option) => (
             <button
               aria-selected={view === option}
               className={view === option ? "selected" : ""}
@@ -234,7 +235,7 @@ export function OwnerDashboard({ ownerName }: { ownerName: string }) {
           ))}
         </div>
 
-        {view !== "list" && (
+        {view !== "list" && view !== "availability" && (
           <div className="calendar-navigation">
             <button aria-label="Previous date" onClick={() => moveDate(-1)}>←</button>
             <div>
@@ -258,7 +259,7 @@ export function OwnerDashboard({ ownerName }: { ownerName: string }) {
           </div>
         )}
 
-        <div className="calendar-legend" aria-label="Appointment status colors">
+        {view !== "availability" && <div className="calendar-legend" aria-label="Appointment status colors">
           <span className="status status-confirmed">Confirmed</span>
           <span className="status status-completed">Completed</span>
           <span className="status status-cancelled">Cancelled</span>
@@ -267,12 +268,12 @@ export function OwnerDashboard({ ownerName }: { ownerName: string }) {
             setState("loading");
             load().catch(() => setState("error"));
           }}>Refresh</button>
-        </div>
+        </div>}
 
         {state === "loading" && <p className="owner-state" role="status">Loading appointments…</p>}
         {state === "error" && <p className="owner-state error" role="alert">{message}</p>}
 
-        {state === "ready" && view !== "list" && (
+        {state === "ready" && view !== "list" && view !== "availability" && (
           <>
             <div className={`calendar-grid ${view === "week" ? "week-grid" : ""}`}>
               {visibleDates.map((date) => {
@@ -330,6 +331,7 @@ export function OwnerDashboard({ ownerName }: { ownerName: string }) {
             </div>
           </>
         )}
+        {view === "availability" && <OwnerAvailability today={today} />}
       </section>
     </main>
   );

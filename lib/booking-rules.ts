@@ -1,6 +1,6 @@
 export const OPENING_MINUTES = 9 * 60;
 export const CLOSING_MINUTES = 17 * 60;
-export const START_INTERVAL = 30;
+export const START_INTERVAL = 15;
 export const SLOT_INTERVAL = 15;
 
 export function minutesToTime(minutes: number) {

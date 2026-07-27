@@ -9,9 +9,25 @@ const services = new Map([
   ["gel-x", { name: "Gel-X Full Set", duration: 90, price: 85 }],
   ["custom-art", { name: "Custom Nail Art", duration: 30, price: 25 }],
 ]);
+type Service = { name: string; duration: number; price: number };
 
 function clean(value: unknown, limit = 200) {
   return typeof value === "string" ? value.trim().slice(0, limit) : "";
+}
+
+function selectedServiceBundle(values: unknown) {
+  const rawIds = Array.isArray(values) ? values : [];
+  const ids = [...new Set(rawIds.map((value) => clean(value, 40)).filter(Boolean))];
+  if (!ids.length || ids.length > services.size) return null;
+  const selected = ids.map((id) => services.get(id)).filter((service): service is Service => Boolean(service));
+  if (selected.length !== ids.length) return null;
+  return {
+    ids,
+    selected,
+    duration: selected.reduce((total, service) => total + service.duration, 0),
+    price: selected.reduce((total, service) => total + service.price, 0),
+    name: selected.map((service) => service.name).join(" + "),
+  };
 }
 
 function phoenixDateKey() {
@@ -101,11 +117,10 @@ export async function GET(request: Request) {
   }
   const url = new URL(request.url);
   const date = clean(url.searchParams.get("date"), 10);
-  const serviceId = clean(url.searchParams.get("serviceId"), 40);
-  const service = services.get(serviceId);
+  const bundle = selectedServiceBundle(url.searchParams.getAll("serviceId"));
   const dateError = validateBookingDate(date);
-  if (!service || dateError) {
-    return Response.json({ error: dateError || "Please choose a valid service." }, { status: 400 });
+  if (!bundle || dateError) {
+    return Response.json({ error: dateError || "Please choose at least one valid service." }, { status: 400 });
   }
 
   await ensureTables();
@@ -113,7 +128,7 @@ export async function GET(request: Request) {
     .bind(date)
     .all<{ slot_time: string }>();
   const availableTimes = filterAvailableTimes(
-    service.duration,
+    bundle.duration,
     result.results.map((row) => row.slot_time),
   );
   return Response.json({ availableTimes });
@@ -122,8 +137,7 @@ export async function GET(request: Request) {
 export async function POST(request: Request) {
   try {
     const body = (await request.json()) as Record<string, unknown>;
-    const serviceId = clean(body.serviceId, 40);
-    const service = services.get(serviceId);
+    const bundle = selectedServiceBundle(body.serviceIds);
     const date = clean(body.date, 10);
     const time = clean(body.time, 5);
     const name = clean(body.name, 100);
@@ -132,8 +146,8 @@ export async function POST(request: Request) {
     const notes = clean(body.notes, 800);
 
     const dateError = validateBookingDate(date);
-    if (!service || dateError || !candidateTimes(service.duration).includes(time)) {
-      return Response.json({ error: "Please choose a valid service, day, and time." }, { status: 400 });
+    if (!bundle || dateError || !candidateTimes(bundle.duration).includes(time)) {
+      return Response.json({ error: "Please choose valid services, day, and time." }, { status: 400 });
     }
     if (name.length < 2 || !email.includes("@") || phone.replace(/\D/g, "").length < 7) {
       return Response.json({ error: "Please enter a valid name, email, and phone number." }, { status: 400 });
@@ -150,8 +164,8 @@ export async function POST(request: Request) {
         reference, service_id, service_name, duration_minutes, price_dollars,
         appointment_date, appointment_time, client_name, client_email, client_phone, notes
       ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`)
-        .bind(reference, serviceId, service.name, service.duration, service.price, date, time, name, email, phone, notes),
-      ...occupiedSlots(time, service.duration).map((slot) =>
+        .bind(reference, bundle.ids.join(","), bundle.name, bundle.duration, bundle.price, date, time, name, email, phone, notes),
+      ...occupiedSlots(time, bundle.duration).map((slot) =>
         env.DB.prepare(
           "INSERT INTO appointment_slots (appointment_date, slot_time, appointment_reference) VALUES (?, ?, ?)",
         ).bind(date, slot, reference),

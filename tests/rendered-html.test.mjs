@@ -60,15 +60,27 @@ test("ships usable app icons and a safe offline shell", async () => {
   assert.match(page, /NailsBySnig/);
 });
 
-test("offers half-hour starts within 9 AM to 5 PM", () => {
+test("offers 15-minute starts within 9 AM to 5 PM", () => {
   const manicureTimes = candidateTimes(60);
   assert.equal(manicureTimes[0], "09:00");
   assert.equal(manicureTimes.at(-1), "16:00");
+  assert.ok(manicureTimes.includes("09:15"));
   assert.ok(manicureTimes.includes("09:30"));
   assert.ok(!manicureTimes.includes("16:30"));
 
   const artTimes = candidateTimes(30);
   assert.equal(artTimes.at(-1), "16:30");
+});
+
+test("blocks the full combined duration of multiple services", () => {
+  const combinedDuration = 60 + 75 + 30;
+  const reserved = occupiedSlots("09:15", combinedDuration);
+
+  assert.equal(reserved[0], "09:15");
+  assert.equal(reserved.at(-1), "11:45");
+  assert.equal(reserved.length, 11);
+  assert.ok(!candidateTimes(combinedDuration).includes("14:30"));
+  assert.ok(candidateTimes(combinedDuration).includes("14:15"));
 });
 
 test("removes every start time that would overlap a booking", () => {

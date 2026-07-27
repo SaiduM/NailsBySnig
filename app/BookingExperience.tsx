@@ -78,7 +78,7 @@ function bookingWindow() {
 export function BookingExperience() {
   const window = useMemo(bookingWindow, []);
   const [bookingOpen, setBookingOpen] = useState(false);
-  const [serviceId, setServiceId] = useState<string>("signature-gel");
+  const [serviceIds, setServiceIds] = useState<string[]>(["signature-gel"]);
   const [date, setDate] = useState(window.minimum);
   const [time, setTime] = useState("");
   const [availableTimes, setAvailableTimes] = useState<string[]>([]);
@@ -86,13 +86,23 @@ export function BookingExperience() {
   const [status, setStatus] = useState<"idle" | "submitting" | "success" | "error">("idle");
   const [message, setMessage] = useState("");
   const [reference, setReference] = useState("");
-  const selectedService = services.find((service) => service.id === serviceId) ?? services[0];
+  const selectedServices = services.filter((service) => serviceIds.includes(service.id));
+  const totalDuration = selectedServices.reduce((total, service) => total + service.duration, 0);
+  const totalPrice = selectedServices.reduce((total, service) => total + service.price, 0);
 
   useEffect(() => {
     const controller = new AbortController();
+    if (!serviceIds.length) {
+      setAvailableTimes([]);
+      setTime("");
+      setAvailabilityStatus("ready");
+      return () => controller.abort();
+    }
     setAvailabilityStatus("loading");
     setMessage("");
-    fetch(`/api/appointments?date=${encodeURIComponent(date)}&serviceId=${encodeURIComponent(serviceId)}`, {
+    const query = new URLSearchParams({ date });
+    serviceIds.forEach((serviceId) => query.append("serviceId", serviceId));
+    fetch(`/api/appointments?${query.toString()}`, {
       signal: controller.signal,
     })
       .then(async (response) => {
@@ -111,14 +121,22 @@ export function BookingExperience() {
         setMessage(error instanceof Error ? error.message : "We couldn’t load appointment times.");
       });
     return () => controller.abort();
-  }, [date, serviceId]);
+  }, [date, serviceIds]);
 
   function openBooking(service?: Service) {
-    if (service) setServiceId(service.id);
+    if (service) setServiceIds([service.id]);
     setBookingOpen(true);
     setStatus("idle");
     requestAnimationFrame(() =>
       document.getElementById("booking")?.scrollIntoView({ behavior: "smooth" }),
+    );
+  }
+
+  function toggleService(serviceId: string) {
+    setServiceIds((current) =>
+      current.includes(serviceId)
+        ? current.filter((id) => id !== serviceId)
+        : [...current, serviceId],
     );
   }
 
@@ -128,7 +146,7 @@ export function BookingExperience() {
     setMessage("");
     const form = new FormData(event.currentTarget);
     const payload = {
-      serviceId,
+      serviceIds,
       date,
       time,
       name: String(form.get("name") ?? "").trim(),
@@ -251,7 +269,7 @@ export function BookingExperience() {
             <p className="eyebrow">Request received</p>
             <h2>You&apos;re on the books.</h2>
             <p>
-              We&apos;ll confirm your {selectedService.name.toLowerCase()} for{" "}
+              We&apos;ll confirm {selectedServices.map((service) => service.name).join(" + ")} for{" "}
               <strong>{displayDate(date)} at {displayTime(time)}</strong>.
             </p>
             <div className="reference">Booking reference <strong>{reference}</strong></div>
@@ -264,22 +282,34 @@ export function BookingExperience() {
               <h2>Your next set starts here.</h2>
               <p>Choose what works for you. Your appointment stays pending until the studio confirms it.</p>
               <div className="selected-summary">
-                <span>{selectedService.symbol}</span>
-                <div><small>Your selection</small><strong>{selectedService.name}</strong><p>{selectedService.duration} min · ${selectedService.price}</p></div>
+                <span>{selectedServices.length > 1 ? selectedServices.length : selectedServices[0]?.symbol ?? "＋"}</span>
+                <div>
+                  <small>{selectedServices.length === 1 ? "Your selection" : `${selectedServices.length} services selected`}</small>
+                  <strong>{selectedServices.length ? selectedServices.map((service) => service.name).join(" + ") : "Choose at least one service"}</strong>
+                  <p>{totalDuration} min · ${totalPrice}</p>
+                </div>
               </div>
             </div>
             <form className="booking-form" onSubmit={submitBooking}>
               <fieldset>
-                <legend><span>1</span> Choose a service</legend>
-                <div className="select-wrap">
-                  <select value={serviceId} onChange={(event) => setServiceId(event.target.value)} aria-label="Service">
-                    {services.map((service) => (
-                      <option value={service.id} key={service.id}>
-                        {service.name} — ${service.price}
-                      </option>
-                    ))}
-                  </select>
+                <legend><span>1</span> Choose one or more services</legend>
+                <div className="service-choice-grid">
+                  {services.map((service) => (
+                    <label className={serviceIds.includes(service.id) ? "selected" : ""} key={service.id}>
+                      <input
+                        type="checkbox"
+                        checked={serviceIds.includes(service.id)}
+                        onChange={() => toggleService(service.id)}
+                      />
+                      <span className="choice-mark" aria-hidden="true">{serviceIds.includes(service.id) ? "✓" : service.symbol}</span>
+                      <span>
+                        <strong>{service.name}</strong>
+                        <small>{service.duration} min · ${service.price}</small>
+                      </span>
+                    </label>
+                  ))}
                 </div>
+                {!serviceIds.length && <p className="selection-error">Select at least one service to see available times.</p>}
               </fieldset>
 
               <fieldset>
@@ -331,7 +361,7 @@ export function BookingExperience() {
               </fieldset>
 
               {status === "error" && <p className="form-error" role="alert">{message}</p>}
-              <button className="submit-booking" disabled={status === "submitting" || !time || availabilityStatus !== "ready"} type="submit">
+              <button className="submit-booking" disabled={status === "submitting" || !serviceIds.length || !time || availabilityStatus !== "ready"} type="submit">
                 {status === "submitting" ? "Saving your appointment…" : "Request appointment"} <span>→</span>
               </button>
               <p className="form-fineprint">No payment is collected today. We&apos;ll contact you to confirm.</p>

@@ -3,6 +3,8 @@ import Link from "next/link";
 import { getChatGPTUser } from "../chatgpt-auth";
 import { OwnerDashboard } from "./OwnerDashboard";
 
+export const dynamic = "force-dynamic";
+
 export default async function OwnerPage() {
   const user = await getChatGPTUser();
   if (!user) redirect("/signin-with-chatgpt?return_to=%2Fowner");

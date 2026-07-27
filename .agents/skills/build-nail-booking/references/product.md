@@ -1,4 +1,4 @@
-# Nail by Snig product brief
+# NailsBySnig product brief
 
 ## Goal
 

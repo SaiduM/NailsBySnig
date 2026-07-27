@@ -130,9 +130,9 @@ export function BookingExperience() {
   return (
     <main>
       <header className="site-header">
-        <a className="brand" href="#top" aria-label="Nail by Snig home">
+        <a className="brand" href="#top" aria-label="NailsBySnig home">
           <span className="brand-mark">NS</span>
-          <span>Nail by Snig</span>
+          <span>NailsBySnig</span>
         </a>
         <nav aria-label="Main navigation">
           <a href="#services">Services</a>
@@ -200,7 +200,7 @@ export function BookingExperience() {
 
       <section className="studio-section" id="studio">
         <div className="studio-note">
-          <p className="eyebrow">Why Nail by Snig</p>
+          <p className="eyebrow">Why NailsBySnig</p>
           <h2>A little appointment that feels like <em>your time.</em></h2>
         </div>
         <div className="studio-points">
@@ -301,7 +301,7 @@ export function BookingExperience() {
       </section>
 
       <footer>
-        <a className="brand" href="#top"><span className="brand-mark">NS</span><span>Nail by Snig</span></a>
+        <a className="brand" href="#top"><span className="brand-mark">NS</span><span>NailsBySnig</span></a>
         <p>Thoughtful nails, simply booked.</p>
         <div><a href="#services">Services</a><a href="#booking">Book</a><span>Tue–Sat · Phoenix, AZ</span></div>
       </footer>

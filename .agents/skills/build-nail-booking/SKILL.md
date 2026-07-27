@@ -1,6 +1,6 @@
 ---
 name: build-nail-booking
-description: Build and evolve the Nail by Snig responsive website and appointment-booking app. Use for product planning, nail service catalog changes, booking-flow development, appointment persistence, mobile UX, release validation, or shipping a focused feature for this repository.
+description: Build and evolve the NailsBySnig responsive website and appointment-booking app. Use for product planning, nail service catalog changes, booking-flow development, appointment persistence, mobile UX, release validation, or shipping a focused feature for this repository.
 ---
 
 # Build Nail Booking

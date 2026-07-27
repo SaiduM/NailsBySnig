@@ -3,8 +3,8 @@ import "./globals.css";
 
 export const metadata: Metadata = {
   title: {
-    default: "Nail by Snig",
-    template: "%s | Nail by Snig",
+    default: "NailsBySnig",
+    template: "%s | NailsBySnig",
   },
   description:
     "A private Phoenix nail studio for detailed gel manicures, Gel-X, and custom nail art.",

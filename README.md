@@ -228,8 +228,12 @@ npm run lint
 2. Run `npm test`.
 3. Run `npm run build:pages` for deployment-related changes.
 4. Review `git diff` and ensure no credentials are present.
-5. Commit and push to `main`.
-6. Wait for the Cloudflare Pages deployment to succeed.
-7. Verify the public booking page and owner dashboard in production.
+5. Commit and push to `main`. This updates source control without changing the
+   live website.
+6. When a release is intentionally approved, manually deploy the selected
+   `main` commit from Cloudflare Pages.
+7. Wait for the manual Cloudflare Pages deployment to succeed.
+8. Verify the public booking page and owner dashboard in production.
 
-Cloudflare Pages automatically deploys pushes to `main`.
+Automatic production and preview deployments are disabled to avoid unnecessary
+free-tier build usage.

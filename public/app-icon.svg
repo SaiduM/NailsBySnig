@@ -1,0 +1,9 @@
+<svg width="512" height="512" viewBox="0 0 512 512" xmlns="http://www.w3.org/2000/svg">
+  <rect width="512" height="512" rx="112" fill="#F8F3E9"/>
+  <path d="M108 380V171c0-39 32-71 71-71h154c39 0 71 32 71 71v209c0 18-14 32-32 32H140c-18 0-32-14-32-32Z" fill="#E9B8CB"/>
+  <path d="M164 350V203c0-28 23-51 51-51h82c28 0 51 23 51 51v147c0 17-13 30-30 30H194c-17 0-30-13-30-30Z" fill="#E75E2E"/>
+  <path d="M213 105h86v63h-86z" rx="14" fill="#242321"/>
+  <circle cx="387" cy="129" r="35" fill="#D6E65D"/>
+  <path d="m387 95 8 25 25 9-25 8-8 26-8-26-26-8 26-9 8-25Z" fill="#242321"/>
+  <text x="256" y="307" text-anchor="middle" font-family="Georgia, serif" font-size="92" font-style="italic" font-weight="700" fill="#FFFDF8">NS</text>
+</svg>

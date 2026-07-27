@@ -36,4 +36,8 @@ Treat these as editable launch defaults until the owner confirms the final menu.
 2. Email or SMS confirmation and reminders.
 3. Calendar sync and configurable availability.
 4. Deposits and cancellation policy acceptance.
-5. Installable PWA polish and returning-client convenience.
+5. Returning-client convenience.
+
+## Completed
+
+- Installable PWA with home-screen icon, standalone display, offline shell, and platform-specific install guidance.

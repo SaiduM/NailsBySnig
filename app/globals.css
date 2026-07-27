@@ -19,6 +19,28 @@ button, a { -webkit-tap-highlight-color: transparent; }
 button { cursor: pointer; }
 a { color: inherit; text-decoration: none; }
 
+.install-app {
+  position: fixed; right: 20px; bottom: 20px; z-index: 30; border: 1px solid rgba(255,255,255,.45);
+  background: var(--ink); color: white; padding: 13px 18px; border-radius: 999px; font-size: 13px;
+  font-weight: 700; box-shadow: 0 10px 30px rgba(36,35,33,.25); display: flex; align-items: center; gap: 8px;
+}
+.install-app span { color: var(--lime); font-size: 17px; }
+.install-dialog-backdrop {
+  position: fixed; inset: 0; z-index: 50; background: rgba(36,35,33,.64); display: grid; place-items: center;
+  padding: 20px;
+}
+.install-dialog {
+  position: relative; width: min(440px, 100%); background: var(--paper); color: var(--ink); padding: 38px;
+  box-shadow: 0 24px 80px rgba(0,0,0,.28);
+}
+.install-dialog h2 { font-size: 38px; line-height: 1.05; letter-spacing: -.05em; margin-bottom: 26px; }
+.install-dialog ol { padding-left: 22px; margin: 0; color: #5d5a55; line-height: 1.8; }
+.install-close { position: absolute; right: 14px; top: 10px; border: 0; background: none; font-size: 26px; }
+.install-icon {
+  width: 66px; height: 66px; margin-bottom: 25px; border-radius: 18px; background: var(--orange); color: white;
+  display: grid; place-items: center; font: italic 25px "Playfair Display", serif; box-shadow: 7px 7px 0 var(--pink);
+}
+
 .site-header {
   height: 82px; display: flex; align-items: center; justify-content: space-between;
   padding: 0 clamp(24px, 5vw, 76px); border-bottom: 1px solid var(--line); background: var(--cream);

@@ -1,5 +1,6 @@
 import { env } from "cloudflare:workers";
 import { candidateTimes, filterAvailableTimes, occupiedSlots } from "../../../lib/booking-rules";
+import { sendAppointmentNotice } from "../../../lib/notifications";
 
 export const runtime = "edge";
 
@@ -13,6 +14,14 @@ type Service = { name: string; duration: number; price: number };
 
 function clean(value: unknown, limit = 200) {
   return typeof value === "string" ? value.trim().slice(0, limit) : "";
+}
+
+function isValidEmail(value: string) {
+  return !value || /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(value);
+}
+
+function isValidPhone(value: string) {
+  return !value || value.replace(/\D/g, "").length >= 10;
 }
 
 function selectedServiceBundle(values: unknown) {
@@ -72,6 +81,8 @@ async function ensureTables() {
       client_phone TEXT NOT NULL,
       notes TEXT NOT NULL DEFAULT '',
       status TEXT NOT NULL DEFAULT 'pending',
+      cancellation_token TEXT,
+      reminder_sent_at TEXT,
       created_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP,
       UNIQUE(appointment_date, appointment_time)
     )`),
@@ -109,6 +120,17 @@ async function ensureTables() {
       appointment_reference
     FROM existing_slots`),
   ]);
+  const columns = await env.DB.prepare("PRAGMA table_info(appointments)").all<{ name: string }>();
+  const names = new Set(columns.results.map((column) => column.name));
+  if (!names.has("cancellation_token")) {
+    await env.DB.prepare("ALTER TABLE appointments ADD COLUMN cancellation_token TEXT").run();
+  }
+  if (!names.has("reminder_sent_at")) {
+    await env.DB.prepare("ALTER TABLE appointments ADD COLUMN reminder_sent_at TEXT").run();
+  }
+  await env.DB.prepare(
+    "CREATE UNIQUE INDEX IF NOT EXISTS appointments_cancellation_token_idx ON appointments(cancellation_token)",
+  ).run();
 }
 
 export async function GET(request: Request) {
@@ -149,8 +171,8 @@ export async function POST(request: Request) {
     if (!bundle || dateError || !candidateTimes(bundle.duration).includes(time)) {
       return Response.json({ error: "Please choose valid services, day, and time." }, { status: 400 });
     }
-    if (name.length < 2 || !email.includes("@") || phone.replace(/\D/g, "").length < 7) {
-      return Response.json({ error: "Please enter a valid name, email, and phone number." }, { status: 400 });
+    if (name.length < 2 || (!email && !phone) || !isValidEmail(email) || !isValidPhone(phone)) {
+      return Response.json({ error: "Please enter your name and a valid email or phone number." }, { status: 400 });
     }
     if (!env.DB) {
       return Response.json({ error: "Booking storage is not connected yet. Please contact the studio." }, { status: 503 });
@@ -159,12 +181,14 @@ export async function POST(request: Request) {
     await ensureTables();
 
     const reference = `NBS-${crypto.randomUUID().slice(0, 8).toUpperCase()}`;
+    const cancellationToken = crypto.randomUUID();
     const bookingStatements = [
       env.DB.prepare(`INSERT INTO appointments (
         reference, service_id, service_name, duration_minutes, price_dollars,
-        appointment_date, appointment_time, client_name, client_email, client_phone, notes
-      ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`)
-        .bind(reference, bundle.ids.join(","), bundle.name, bundle.duration, bundle.price, date, time, name, email, phone, notes),
+        appointment_date, appointment_time, client_name, client_email, client_phone, notes,
+        cancellation_token
+      ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`)
+        .bind(reference, bundle.ids.join(","), bundle.name, bundle.duration, bundle.price, date, time, name, email, phone, notes, cancellationToken),
       ...occupiedSlots(time, bundle.duration).map((slot) =>
         env.DB.prepare(
           "INSERT INTO appointment_slots (appointment_date, slot_time, appointment_reference) VALUES (?, ?, ?)",
@@ -173,7 +197,19 @@ export async function POST(request: Request) {
     ];
     await env.DB.batch(bookingStatements);
 
-    return Response.json({ reference }, { status: 201 });
+    const origin = new URL(request.url).origin;
+    const cancelUrl = `${origin}/cancel?token=${encodeURIComponent(cancellationToken)}`;
+    const notificationSent = await sendAppointmentNotice("booked", {
+      reference,
+      serviceName: bundle.name,
+      date,
+      time,
+      name,
+      email,
+      phone,
+      manageUrl: cancelUrl,
+    });
+    return Response.json({ reference, cancelUrl, notificationSent }, { status: 201 });
   } catch (error) {
     const message = error instanceof Error ? error.message : "";
     if (message.includes("UNIQUE constraint failed")) {

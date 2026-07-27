@@ -95,3 +95,23 @@ test("removes every start time that would overlap a booking", () => {
   assert.ok(!available.includes("11:30"));
   assert.ok(available.includes("11:45"));
 });
+
+test("requires either email or phone and supports confirmation, reminders, and cancellation", async () => {
+  const [bookingApi, manageApi, reminderApi, bookingUi] = await Promise.all([
+    source("app/api/appointments/route.ts"),
+    source("app/api/appointments/cancel/route.ts"),
+    source("app/api/reminders/route.ts"),
+    source("app/BookingExperience.tsx"),
+  ]);
+
+  assert.match(bookingApi, /\(!email && !phone\)/);
+  assert.match(bookingApi, /cancellationToken = crypto\.randomUUID/);
+  assert.match(bookingApi, /sendAppointmentNotice\("booked"/);
+  assert.match(manageApi, /action === "confirm"/);
+  assert.match(manageApi, /DELETE FROM appointment_slots/);
+  assert.match(reminderApi, /reminder_sent_at IS NULL/);
+  assert.match(reminderApi, /sendAppointmentNotice\("reminder"/);
+  assert.doesNotMatch(bookingUi, /name="phone"[^>]*required/);
+  assert.doesNotMatch(bookingUi, /name="email"[^>]*required/);
+  assert.match(bookingUi, /View or cancel appointment/);
+});

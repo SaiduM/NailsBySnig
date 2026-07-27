@@ -16,6 +16,8 @@ export const appointments = sqliteTable(
     clientPhone: text("client_phone").notNull(),
     notes: text("notes").notNull().default(""),
     status: text("status").notNull().default("pending"),
+    cancellationToken: text("cancellation_token").unique(),
+    reminderSentAt: text("reminder_sent_at"),
     createdAt: text("created_at").notNull().default("CURRENT_TIMESTAMP"),
   },
   (table) => [

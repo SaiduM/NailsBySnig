@@ -86,6 +86,7 @@ export function BookingExperience() {
   const [status, setStatus] = useState<"idle" | "submitting" | "success" | "error">("idle");
   const [message, setMessage] = useState("");
   const [reference, setReference] = useState("");
+  const [cancelUrl, setCancelUrl] = useState("");
   const selectedServices = services.filter((service) => serviceIds.includes(service.id));
   const totalDuration = selectedServices.reduce((total, service) => total + service.duration, 0);
   const totalPrice = selectedServices.reduce((total, service) => total + service.price, 0);
@@ -161,9 +162,10 @@ export function BookingExperience() {
         headers: { "content-type": "application/json" },
         body: JSON.stringify(payload),
       });
-      const data = (await response.json()) as { error?: string; reference?: string };
+      const data = (await response.json()) as { error?: string; reference?: string; cancelUrl?: string };
       if (!response.ok) throw new Error(data.error || "We couldn’t save that appointment.");
       setReference(data.reference ?? "");
+      setCancelUrl(data.cancelUrl ?? "");
       setStatus("success");
     } catch (error) {
       setMessage(error instanceof Error ? error.message : "Please try again.");
@@ -273,6 +275,7 @@ export function BookingExperience() {
               <strong>{displayDate(date)} at {displayTime(time)}</strong>.
             </p>
             <div className="reference">Booking reference <strong>{reference}</strong></div>
+            {cancelUrl && <a className="confirmation-cancel" href={cancelUrl}>View or cancel appointment</a>}
             <button onClick={() => { setStatus("idle"); setBookingOpen(false); }}>Back to home</button>
           </div>
         ) : (
@@ -354,8 +357,8 @@ export function BookingExperience() {
                 <legend><span>4</span> Your details</legend>
                 <div className="field-grid">
                   <label>Full name<input name="name" autoComplete="name" required minLength={2} /></label>
-                  <label>Phone<input name="phone" type="tel" autoComplete="tel" required /></label>
-                  <label className="full-field">Email<input name="email" type="email" autoComplete="email" required /></label>
+                  <label>Phone <small>Email or phone required</small><input name="phone" type="tel" autoComplete="tel" /></label>
+                  <label>Email <small>Email or phone required</small><input name="email" type="email" autoComplete="email" /></label>
                   <label className="full-field">Anything we should know? <small>Optional</small><textarea name="notes" rows={3} placeholder="Nail art ideas, removal needed, or accessibility notes..." /></label>
                 </div>
               </fieldset>

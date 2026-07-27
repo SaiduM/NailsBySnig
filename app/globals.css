@@ -170,6 +170,18 @@ textarea { resize: vertical; }
 .confirmation > p:not(.eyebrow) { font-size: 17px; margin: 25px auto; max-width: 530px; }
 .reference { display: inline-flex; flex-direction: column; gap: 4px; background: rgba(255,255,255,.15); padding: 14px 22px; font-size: 11px; text-transform: uppercase; letter-spacing: .12em; }
 .confirmation button { display: block; margin: 28px auto 0; border: 1px solid white; background: transparent; color: white; padding: 13px 20px; }
+.confirmation-cancel { display: block; width: fit-content; margin: 20px auto 0; text-decoration: underline; font-weight: 700; }
+.manage-appointment { min-height: 100vh; display: grid; place-items: center; padding: 24px; background: var(--pink); }
+.manage-card { width: min(620px, 100%); background: var(--paper); padding: clamp(28px, 6vw, 64px); box-shadow: 12px 12px 0 var(--orange); }
+.manage-card .brand { margin-bottom: 60px; }
+.manage-card h1 { font-size: clamp(42px, 7vw, 72px); line-height: .95; margin-bottom: 28px; }
+.manage-details { display: grid; gap: 7px; padding: 20px; margin-bottom: 24px; border: 1px solid var(--line); background: var(--cream); }
+.manage-details span { color: #6a6761; font-size: 13px; }
+.manage-card button { border: 0; background: var(--orange); color: white; padding: 16px 20px; font-weight: 700; width: 100%; }
+.manage-card button:disabled { opacity: .6; }
+.manage-actions { display: grid; gap: 10px; }
+.manage-card .secondary-manage { background: transparent; color: var(--ink); border: 1px solid var(--ink); margin-top: 10px; }
+.manage-home { display: block; margin-top: 22px; text-align: center; text-decoration: underline; }
 
 footer { padding: 45px clamp(24px, 5vw, 76px); display: grid; grid-template-columns: 1fr 1fr 1fr; align-items: center; gap: 20px; border-top: 1px solid var(--line); }
 footer > p { text-align: center; margin: 0; color: #6a6761; font-size: 13px; }

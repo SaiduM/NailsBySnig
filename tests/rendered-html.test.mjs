@@ -115,3 +115,20 @@ test("requires either email or phone and supports confirmation, reminders, and c
   assert.doesNotMatch(bookingUi, /name="email"[^>]*required/);
   assert.match(bookingUi, /View or cancel appointment/);
 });
+
+test("protects an owner dashboard for appointment tracking and status changes", async () => {
+  const [ownerApi, ownerPage, dashboard, ownerAuth] = await Promise.all([
+    source("app/api/owner/appointments/route.ts"),
+    source("app/owner/page.tsx"),
+    source("app/owner/OwnerDashboard.tsx"),
+    source("lib/owner-auth.ts"),
+  ]);
+  assert.match(ownerAuth, /OWNER_EMAIL/);
+  assert.match(ownerAuth, /oai-authenticated-user-email/);
+  assert.match(ownerPage, /getChatGPTUser/);
+  assert.match(ownerApi, /ORDER BY appointment_date ASC, appointment_time ASC/);
+  assert.match(ownerApi, /DELETE FROM appointment_slots/);
+  assert.match(dashboard, /Show past appointments/);
+  assert.match(dashboard, /Mark complete/);
+  assert.match(dashboard, /Add appointment/);
+});

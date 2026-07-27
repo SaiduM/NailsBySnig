@@ -35,8 +35,7 @@ Treat these as editable launch defaults until the owner confirms the final menu.
 
 ## Later roadmap
 
-1. Owner appointment dashboard and status changes.
-2. Configure production email/SMS provider credentials and daily reminder scheduling.
+1. Configure production email/SMS provider credentials and daily reminder scheduling.
 3. Calendar sync and configurable availability.
 4. Deposits and cancellation policy acceptance.
 5. Returning-client convenience.
@@ -46,3 +45,4 @@ Treat these as editable launch defaults until the owner confirms the final menu.
 - Installable PWA with home-screen icon, standalone display, offline shell, and platform-specific install guidance.
 - Client cancellation links that release reserved appointment slots.
 - Either email or phone is required for booking; notification delivery supports email, SMS, immediate receipts, and one-day confirm/cancel reminders.
+- Owner dashboard lists upcoming or past appointments and supports confirmation, completion, cancellation, and manual booking through the public conflict-safe flow.

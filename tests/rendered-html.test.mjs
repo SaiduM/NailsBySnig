@@ -96,7 +96,7 @@ test("removes every start time that would overlap a booking", () => {
   assert.ok(available.includes("11:45"));
 });
 
-test("requires either email or phone and supports confirmation, reminders, and cancellation", async () => {
+test("automatically confirms bookings and supports reminders and cancellation", async () => {
   const [bookingApi, manageApi, reminderApi, bookingUi] = await Promise.all([
     source("app/api/appointments/route.ts"),
     source("app/api/appointments/cancel/route.ts"),
@@ -106,6 +106,8 @@ test("requires either email or phone and supports confirmation, reminders, and c
 
   assert.match(bookingApi, /\(!email && !phone\)/);
   assert.match(bookingApi, /cancellationToken = crypto\.randomUUID/);
+  assert.match(bookingApi, /cancellation_token, status/);
+  assert.match(bookingApi, /'confirmed'/);
   assert.match(bookingApi, /sendAppointmentNotice\("booked"/);
   assert.match(manageApi, /action === "confirm"/);
   assert.match(manageApi, /DELETE FROM appointment_slots/);
@@ -113,6 +115,7 @@ test("requires either email or phone and supports confirmation, reminders, and c
   assert.match(reminderApi, /sendAppointmentNotice\("reminder"/);
   assert.doesNotMatch(bookingUi, /name="phone"[^>]*required/);
   assert.doesNotMatch(bookingUi, /name="email"[^>]*required/);
+  assert.match(bookingUi, /Appointment confirmed/);
   assert.match(bookingUi, /View or cancel appointment/);
 });
 
@@ -133,6 +136,7 @@ test("protects an owner dashboard for appointment tracking and status changes", 
   assert.match(ownerApi, /DELETE FROM appointment_slots/);
   assert.match(dashboard, /Show past appointments/);
   assert.match(dashboard, /Mark complete/);
+  assert.doesNotMatch(dashboard, />Confirm<\/button>/);
   assert.match(dashboard, /Add appointment/);
   assert.match(ownerSession, /SameSite=Strict/);
   assert.match(ownerSession, /crypto\.subtle\.sign/);

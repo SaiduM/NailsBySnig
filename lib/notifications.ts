@@ -26,14 +26,14 @@ function content(kind: NoticeKind, appointment: AppointmentNotice) {
   const when = `${appointment.date} at ${appointment.time}`;
   if (kind === "booked") {
     return {
-      subject: `NailsBySnig booking received — ${appointment.reference}`,
-      text: `Hi ${appointment.name}, we received your ${appointment.serviceName} appointment request for ${when}. Manage or cancel: ${appointment.manageUrl}`,
+      subject: `NailsBySnig appointment confirmed — ${appointment.reference}`,
+      text: `Hi ${appointment.name}, your ${appointment.serviceName} appointment is confirmed for ${when}. Manage or cancel: ${appointment.manageUrl}`,
     };
   }
   if (kind === "reminder") {
     return {
-      subject: `Confirm tomorrow’s NailsBySnig appointment`,
-      text: `Hi ${appointment.name}, reminder: your ${appointment.serviceName} appointment is tomorrow, ${when}. Please confirm or cancel: ${appointment.manageUrl}`,
+      subject: `Tomorrow’s NailsBySnig appointment`,
+      text: `Hi ${appointment.name}, reminder: your ${appointment.serviceName} appointment is tomorrow, ${when}. Manage or cancel: ${appointment.manageUrl}`,
     };
   }
   if (kind === "confirmed") {

@@ -266,10 +266,10 @@ export function BookingExperience() {
         ) : status === "success" ? (
           <div className="confirmation" role="status">
             <div className="confirmation-mark">✓</div>
-            <p className="eyebrow">Request received</p>
+            <p className="eyebrow">Appointment confirmed</p>
             <h2>You&apos;re on the books.</h2>
             <p>
-              We&apos;ll confirm {selectedServices.map((service) => service.name).join(" + ")} for{" "}
+              Your {selectedServices.map((service) => service.name).join(" + ")} is confirmed for{" "}
               <strong>{displayDate(date)} at {displayTime(time)}</strong>.
             </p>
             <div className="reference">Booking reference <strong>{reference}</strong></div>
@@ -281,7 +281,7 @@ export function BookingExperience() {
             <div className="booking-summary">
               <p className="eyebrow">Book your visit</p>
               <h2>Your next set starts here.</h2>
-              <p>Choose what works for you. Your appointment stays pending until the studio confirms it.</p>
+              <p>Choose what works for you. Available times are confirmed as soon as you book.</p>
               <div className="selected-summary">
                 <span>{selectedServices.length > 1 ? selectedServices.length : selectedServices[0]?.symbol ?? "＋"}</span>
                 <div>
@@ -363,9 +363,9 @@ export function BookingExperience() {
 
               {status === "error" && <p className="form-error" role="alert">{message}</p>}
               <button className="submit-booking" disabled={status === "submitting" || !serviceIds.length || !time || availabilityStatus !== "ready"} type="submit">
-                {status === "submitting" ? "Saving your appointment…" : "Request appointment"} <span>→</span>
+                {status === "submitting" ? "Saving your appointment…" : "Book appointment"} <span>→</span>
               </button>
-              <p className="form-fineprint">No payment is collected today. We&apos;ll contact you to confirm.</p>
+              <p className="form-fineprint">No payment is collected today. Your selected time is reserved immediately.</p>
             </form>
           </div>
         )}

@@ -80,7 +80,7 @@ async function ensureTables() {
       client_email TEXT NOT NULL,
       client_phone TEXT NOT NULL,
       notes TEXT NOT NULL DEFAULT '',
-      status TEXT NOT NULL DEFAULT 'pending',
+      status TEXT NOT NULL DEFAULT 'confirmed',
       cancellation_token TEXT,
       reminder_sent_at TEXT,
       created_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP,
@@ -94,6 +94,7 @@ async function ensureTables() {
       PRIMARY KEY (appointment_date, slot_time)
     )`),
     env.DB.prepare("CREATE INDEX IF NOT EXISTS appointment_slots_reference_idx ON appointment_slots(appointment_reference)"),
+    env.DB.prepare("UPDATE appointments SET status = 'confirmed' WHERE status = 'pending'"),
     env.DB.prepare(`WITH RECURSIVE existing_slots(
       appointment_date, appointment_reference, slot_minutes, end_minutes
     ) AS (
@@ -186,8 +187,8 @@ export async function POST(request: Request) {
       env.DB.prepare(`INSERT INTO appointments (
         reference, service_id, service_name, duration_minutes, price_dollars,
         appointment_date, appointment_time, client_name, client_email, client_phone, notes,
-        cancellation_token
-      ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`)
+        cancellation_token, status
+      ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 'confirmed')`)
         .bind(reference, bundle.ids.join(","), bundle.name, bundle.duration, bundle.price, date, time, name, email, phone, notes, cancellationToken),
       ...occupiedSlots(time, bundle.duration).map((slot) =>
         env.DB.prepare(

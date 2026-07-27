@@ -109,7 +109,6 @@ export function OwnerDashboard({ ownerName }: { ownerName: string }) {
                 {appointment.notes && <p className="appointment-notes">{appointment.notes}</p>}
               </div>
               <div className="appointment-actions">
-                {appointment.status === "pending" && <button onClick={() => updateStatus(appointment.reference, "confirmed")}>Confirm</button>}
                 {appointment.status === "confirmed" && <button onClick={() => updateStatus(appointment.reference, "completed")}>Mark complete</button>}
                 {appointment.status !== "cancelled" && appointment.status !== "completed" && (
                   <button className="danger" onClick={() => updateStatus(appointment.reference, "cancelled")}>Cancel</button>

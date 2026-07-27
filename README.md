@@ -20,9 +20,9 @@ conflict-safe appointment booking and a private owner dashboard.
 - Client name plus at least one valid contact method: email or phone
 - Durable Cloudflare D1 appointment and reserved-slot records
 - Booking reference and secure appointment management link
-- Client confirmation and cancellation flow
+- Automatic confirmation and client cancellation flow
 - Private owner dashboard with upcoming and past appointments
-- Owner actions for confirmation, completion, cancellation, and manual booking
+- Owner actions for completion, cancellation, and manual booking
 - Encrypted owner password and signed 12-hour owner sessions
 - Email/SMS delivery code for booking receipts, reminders, confirmations, and
   cancellations
@@ -42,8 +42,6 @@ These should be completed before promoting the website broadly.
 - [ ] Configure SMS delivery and register the sending phone number if text
       messages are required.
 - [ ] Schedule the protected reminder endpoint to run once per day.
-- [ ] Send a notification when the owner confirms an appointment from the
-      dashboard. Client-side confirmation already sends one.
 - [ ] Add owner controls for closed dates, vacations, and manually blocked time.
       Availability is currently fixed to Tuesday–Saturday, 9:00 AM–5:00 PM.
 - [ ] Add a privacy notice explaining how client contact and appointment data is
@@ -130,7 +128,7 @@ with:
 Authorization: Bearer <REMINDER_SECRET>
 ```
 
-The reminder job finds pending or confirmed appointments scheduled for the
+The reminder job finds confirmed appointments scheduled for the
 following day in the `America/Phoenix` time zone. It marks a reminder as sent
 only after at least one configured delivery channel succeeds.
 

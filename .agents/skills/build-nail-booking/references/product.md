@@ -31,7 +31,7 @@ Treat these as editable launch defaults until the owner confirms the final menu.
 - Operating hours: 9:00 AM–5:00 PM, with appointment starts every 15 minutes when all selected services can finish by 5:00 PM.
 - Turnaround gap: reserve 15 minutes after every appointment for cleanup and preparation before the next client.
 - Conflict protection: reserve every 15-minute segment of the combined service duration plus the turnaround gap in one atomic database operation so overlapping appointments cannot both succeed.
-- Appointments begin as `pending` so the studio can confirm them manually.
+- Conflict-safe bookings are confirmed immediately after their reserved slots are saved.
 
 ## Later roadmap
 
@@ -44,6 +44,6 @@ Treat these as editable launch defaults until the owner confirms the final menu.
 
 - Installable PWA with home-screen icon, standalone display, offline shell, and platform-specific install guidance.
 - Client cancellation links that release reserved appointment slots.
-- Either email or phone is required for booking; notification delivery supports email, SMS, immediate receipts, and one-day confirm/cancel reminders.
-- Owner dashboard lists upcoming or past appointments and supports confirmation, completion, cancellation, and manual booking through the public conflict-safe flow.
+- Either email or phone is required for booking; notification delivery supports email, SMS, immediate receipts, and one-day manage/cancel reminders.
+- Owner dashboard lists upcoming or past appointments and supports completion, cancellation, and manual booking through the public conflict-safe flow.
 - Owner access supports a private password with a signed, secure, 12-hour session.

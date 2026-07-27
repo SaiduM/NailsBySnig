@@ -135,6 +135,10 @@ test("protects an owner dashboard for appointment tracking and status changes", 
   assert.match(ownerApi, /ORDER BY appointment_date ASC, appointment_time ASC/);
   assert.match(ownerApi, /DELETE FROM appointment_slots/);
   assert.match(dashboard, /Show past appointments/);
+  assert.match(dashboard, /\["today", "day", "week", "list"\]/);
+  assert.match(dashboard, /openGaps/);
+  assert.match(dashboard, /Quick details/);
+  assert.match(dashboard, /Appointment status colors/);
   assert.match(dashboard, /Mark complete/);
   assert.doesNotMatch(dashboard, />Confirm<\/button>/);
   assert.match(dashboard, /Add appointment/);

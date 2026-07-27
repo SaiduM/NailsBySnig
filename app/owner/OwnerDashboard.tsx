@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 
 type Appointment = {
   reference: string;
@@ -17,28 +17,141 @@ type Appointment = {
   status: string;
 };
 
+type CalendarView = "today" | "day" | "week" | "list";
+type Gap = { start: string; end: string };
+
+const OPEN_MINUTES = 9 * 60;
+const CLOSE_MINUTES = 17 * 60;
+const TURNAROUND_MINUTES = 15;
+
+function phoenixToday() {
+  const parts = new Intl.DateTimeFormat("en-US", {
+    timeZone: "America/Phoenix",
+    year: "numeric",
+    month: "2-digit",
+    day: "2-digit",
+  }).formatToParts(new Date());
+  const values = Object.fromEntries(parts.map((part) => [part.type, part.value]));
+  return `${values.year}-${values.month}-${values.day}`;
+}
+
+function addDays(value: string, amount: number) {
+  const date = new Date(`${value}T12:00:00Z`);
+  date.setUTCDate(date.getUTCDate() + amount);
+  return date.toISOString().slice(0, 10);
+}
+
+function businessWeek(value: string) {
+  const date = new Date(`${value}T12:00:00Z`);
+  const day = date.getUTCDay();
+  const daysSinceTuesday = (day - 2 + 7) % 7;
+  const tuesday = addDays(value, -daysSinceTuesday);
+  return Array.from({ length: 5 }, (_, index) => addDays(tuesday, index));
+}
+
+function dateLabel(value: string, long = false) {
+  return new Intl.DateTimeFormat("en-US", {
+    weekday: long ? "long" : "short",
+    month: long ? "long" : "short",
+    day: "numeric",
+  }).format(new Date(`${value}T12:00:00Z`));
+}
+
+function toMinutes(value: string) {
+  const [hour, minute] = value.split(":").map(Number);
+  return hour * 60 + minute;
+}
+
+function timeLabel(value: string) {
+  const minutes = toMinutes(value);
+  const hour = Math.floor(minutes / 60);
+  const minute = minutes % 60;
+  const suffix = hour >= 12 ? "PM" : "AM";
+  return `${hour % 12 || 12}:${String(minute).padStart(2, "0")} ${suffix}`;
+}
+
+function minuteTime(value: number) {
+  return `${String(Math.floor(value / 60)).padStart(2, "0")}:${String(value % 60).padStart(2, "0")}`;
+}
+
+function openGaps(appointments: Appointment[]): Gap[] {
+  const occupied = appointments
+    .filter((appointment) => appointment.status !== "cancelled")
+    .map((appointment) => ({
+      start: toMinutes(appointment.appointment_time),
+      end: Math.min(CLOSE_MINUTES, toMinutes(appointment.appointment_time) + appointment.duration_minutes + TURNAROUND_MINUTES),
+    }))
+    .sort((left, right) => left.start - right.start);
+
+  const gaps: Gap[] = [];
+  let cursor = OPEN_MINUTES;
+  for (const interval of occupied) {
+    if (interval.start > cursor) gaps.push({ start: minuteTime(cursor), end: minuteTime(interval.start) });
+    cursor = Math.max(cursor, interval.end);
+  }
+  if (cursor < CLOSE_MINUTES) gaps.push({ start: minuteTime(cursor), end: minuteTime(CLOSE_MINUTES) });
+  return gaps;
+}
+
+function AppointmentDetails({
+  appointment,
+  updateStatus,
+}: {
+  appointment: Appointment;
+  updateStatus: (reference: string, status: string) => Promise<void>;
+}) {
+  return (
+    <article className="appointment-card appointment-details">
+      <div className="appointment-when">
+        <strong>{dateLabel(appointment.appointment_date, true)}</strong>
+        <span>{timeLabel(appointment.appointment_time)}</span>
+      </div>
+      <div className="appointment-main">
+        <div>
+          <h2>{appointment.client_name}</h2>
+          <span className={`status status-${appointment.status}`}>{appointment.status}</span>
+        </div>
+        <strong>{appointment.service_name}</strong>
+        <p>{appointment.duration_minutes} min · {appointment.reference}</p>
+        <div className="appointment-contact">
+          <a href={`mailto:${appointment.client_email}`}>{appointment.client_email}</a>
+          <a href={`tel:${appointment.client_phone}`}>{appointment.client_phone}</a>
+        </div>
+        {appointment.notes && <p className="appointment-notes">{appointment.notes}</p>}
+      </div>
+      <div className="appointment-actions">
+        {appointment.status === "confirmed" && (
+          <button onClick={() => updateStatus(appointment.reference, "completed")}>Mark complete</button>
+        )}
+        {appointment.status !== "cancelled" && appointment.status !== "completed" && (
+          <button className="danger" onClick={() => updateStatus(appointment.reference, "cancelled")}>Cancel</button>
+        )}
+      </div>
+    </article>
+  );
+}
+
 export function OwnerDashboard({ ownerName }: { ownerName: string }) {
+  const today = useMemo(() => phoenixToday(), []);
   const [appointments, setAppointments] = useState<Appointment[]>([]);
   const [includePast, setIncludePast] = useState(false);
+  const [view, setView] = useState<CalendarView>("today");
+  const [anchorDate, setAnchorDate] = useState(today);
+  const [selectedReference, setSelectedReference] = useState("");
   const [state, setState] = useState<"loading" | "ready" | "error">("loading");
   const [message, setMessage] = useState("");
 
-  const load = useCallback(async () => {
-    setState("loading");
-    const response = await fetch(`/api/owner/appointments?includePast=${includePast}`);
+  const load = useCallback(async (signal?: AbortSignal) => {
+    const response = await fetch("/api/owner/appointments?includePast=true", { signal });
     const data = await response.json() as { appointments?: Appointment[]; error?: string };
-    if (!response.ok) {
-      setMessage(data.error || "Appointments could not be loaded.");
-      setState("error");
-      return;
-    }
+    if (!response.ok) throw new Error(data.error || "Appointments could not be loaded.");
     setAppointments(data.appointments ?? []);
     setState("ready");
-  }, [includePast]);
+  }, []);
 
   useEffect(() => {
     const controller = new AbortController();
-    fetch(`/api/owner/appointments?includePast=${includePast}`, { signal: controller.signal })
+    fetch("/api/owner/appointments?includePast=true", { signal: controller.signal })
       .then(async (response) => {
         const data = await response.json() as { appointments?: Appointment[]; error?: string };
         if (!response.ok) throw new Error(data.error || "Appointments could not be loaded.");
@@ -51,7 +164,12 @@ export function OwnerDashboard({ ownerName }: { ownerName: string }) {
         setState("error");
       });
     return () => controller.abort();
-  }, [includePast]);
+  }, []);
+
+  const visibleDates = view === "week" ? businessWeek(anchorDate) : [view === "today" ? today : anchorDate];
+  const calendarAppointments = appointments.filter((appointment) => visibleDates.includes(appointment.appointment_date));
+  const listAppointments = appointments.filter((appointment) => includePast || appointment.appointment_date >= today);
+  const selectedAppointment = appointments.find((appointment) => appointment.reference === selectedReference);
 
   async function updateStatus(reference: string, status: string) {
     const response = await fetch("/api/owner/appointments", {
@@ -68,6 +186,23 @@ export function OwnerDashboard({ ownerName }: { ownerName: string }) {
     await load();
   }
 
+  function chooseView(nextView: CalendarView) {
+    setView(nextView);
+    setSelectedReference("");
+    if (nextView === "today") setAnchorDate(today);
+  }
+
+  function moveDate(direction: number) {
+    if (view === "today") {
+      setView("day");
+      setAnchorDate(addDays(today, direction));
+      setSelectedReference("");
+      return;
+    }
+    setAnchorDate((current) => addDays(current, direction * (view === "week" ? 7 : 1)));
+    setSelectedReference("");
+  }
+
   async function signOut() {
     await fetch("/api/owner/session", { method: "DELETE" });
     window.location.assign("/owner/login");
@@ -81,42 +216,120 @@ export function OwnerDashboard({ ownerName }: { ownerName: string }) {
       </header>
       <section className="owner-content">
         <div className="owner-title">
-          <div><p className="eyebrow">Owner dashboard</p><h1>Appointments</h1></div>
+          <div><p className="eyebrow">Owner dashboard</p><h1>Calendar</h1></div>
           <Link className="owner-add" href="/#booking">＋ Add appointment</Link>
         </div>
-        <div className="owner-toolbar">
-          <label><input type="checkbox" checked={includePast} onChange={(event) => setIncludePast(event.target.checked)} /> Show past appointments</label>
-          <button onClick={load}>Refresh</button>
-        </div>
-        {state === "loading" && <p className="owner-state" role="status">Loading appointments…</p>}
-        {state === "error" && <p className="owner-state error" role="alert">{message}</p>}
-        {state === "ready" && !appointments.length && <p className="owner-state">No appointments to show yet.</p>}
-        <div className="appointment-list">
-          {appointments.map((appointment) => (
-            <article className="appointment-card" key={appointment.reference}>
-              <div className="appointment-when">
-                <strong>{appointment.appointment_date}</strong>
-                <span>{appointment.appointment_time}</span>
-              </div>
-              <div className="appointment-main">
-                <div><h2>{appointment.client_name}</h2><span className={`status status-${appointment.status}`}>{appointment.status}</span></div>
-                <strong>{appointment.service_name}</strong>
-                <p>{appointment.duration_minutes} min · {appointment.reference}</p>
-                <div className="appointment-contact">
-                  {appointment.client_email && <a href={`mailto:${appointment.client_email}`}>{appointment.client_email}</a>}
-                  {appointment.client_phone && <a href={`tel:${appointment.client_phone}`}>{appointment.client_phone}</a>}
-                </div>
-                {appointment.notes && <p className="appointment-notes">{appointment.notes}</p>}
-              </div>
-              <div className="appointment-actions">
-                {appointment.status === "confirmed" && <button onClick={() => updateStatus(appointment.reference, "completed")}>Mark complete</button>}
-                {appointment.status !== "cancelled" && appointment.status !== "completed" && (
-                  <button className="danger" onClick={() => updateStatus(appointment.reference, "cancelled")}>Cancel</button>
-                )}
-              </div>
-            </article>
+
+        <div className="calendar-view-tabs" role="tablist" aria-label="Calendar view">
+          {(["today", "day", "week", "list"] as CalendarView[]).map((option) => (
+            <button
+              aria-selected={view === option}
+              className={view === option ? "selected" : ""}
+              key={option}
+              onClick={() => chooseView(option)}
+              role="tab"
+            >
+              {option[0].toUpperCase() + option.slice(1)}
+            </button>
           ))}
         </div>
+
+        {view !== "list" && (
+          <div className="calendar-navigation">
+            <button aria-label="Previous date" onClick={() => moveDate(-1)}>←</button>
+            <div>
+              <strong>
+                {view === "week"
+                  ? `${dateLabel(visibleDates[0])} – ${dateLabel(visibleDates[visibleDates.length - 1])}`
+                  : dateLabel(visibleDates[0], true)}
+              </strong>
+              <span>9:00 AM–5:00 PM · Phoenix time</span>
+            </div>
+            <input
+              aria-label="Calendar date"
+              onChange={(event) => {
+                setAnchorDate(event.target.value);
+                if (view === "today" && event.target.value !== today) setView("day");
+              }}
+              type="date"
+              value={anchorDate}
+            />
+            <button aria-label="Next date" onClick={() => moveDate(1)}>→</button>
+          </div>
+        )}
+
+        <div className="calendar-legend" aria-label="Appointment status colors">
+          <span className="status status-confirmed">Confirmed</span>
+          <span className="status status-completed">Completed</span>
+          <span className="status status-cancelled">Cancelled</span>
+          <span className="gap-key">Open time</span>
+          <button onClick={() => {
+            setState("loading");
+            load().catch(() => setState("error"));
+          }}>Refresh</button>
+        </div>
+
+        {state === "loading" && <p className="owner-state" role="status">Loading appointments…</p>}
+        {state === "error" && <p className="owner-state error" role="alert">{message}</p>}
+
+        {state === "ready" && view !== "list" && (
+          <>
+            <div className={`calendar-grid ${view === "week" ? "week-grid" : ""}`}>
+              {visibleDates.map((date) => {
+                const dayAppointments = calendarAppointments.filter((appointment) => appointment.appointment_date === date);
+                const gaps = openGaps(dayAppointments);
+                return (
+                  <section className="calendar-day" key={date}>
+                    <header><strong>{dateLabel(date)}</strong><span>{dayAppointments.length} appointment{dayAppointments.length === 1 ? "" : "s"}</span></header>
+                    <div className="calendar-events">
+                      {dayAppointments.map((appointment) => (
+                        <button
+                          className={`calendar-event calendar-event-${appointment.status}`}
+                          key={appointment.reference}
+                          onClick={() => setSelectedReference(appointment.reference)}
+                        >
+                          <span>{timeLabel(appointment.appointment_time)}</span>
+                          <strong>{appointment.client_name}</strong>
+                          <small>{appointment.service_name} · {appointment.duration_minutes} min</small>
+                        </button>
+                      ))}
+                      {gaps.map((gap) => (
+                        <div className="calendar-gap" key={`${date}-${gap.start}`}>
+                          <span>{timeLabel(gap.start)}–{timeLabel(gap.end)}</span>
+                          <small>Open</small>
+                        </div>
+                      ))}
+                    </div>
+                  </section>
+                );
+              })}
+            </div>
+            {selectedAppointment && (
+              <section className="quick-details" aria-live="polite">
+                <div className="quick-details-heading">
+                  <div><p className="eyebrow">Quick details</p><h2>Appointment</h2></div>
+                  <button onClick={() => setSelectedReference("")}>Close</button>
+                </div>
+                <AppointmentDetails appointment={selectedAppointment} updateStatus={updateStatus} />
+              </section>
+            )}
+          </>
+        )}
+
+        {state === "ready" && view === "list" && (
+          <>
+            <div className="owner-toolbar">
+              <label><input type="checkbox" checked={includePast} onChange={(event) => setIncludePast(event.target.checked)} /> Show past appointments</label>
+              <span>{listAppointments.length} appointment{listAppointments.length === 1 ? "" : "s"}</span>
+            </div>
+            {!listAppointments.length && <p className="owner-state">No appointments to show yet.</p>}
+            <div className="appointment-list">
+              {listAppointments.map((appointment) => (
+                <AppointmentDetails appointment={appointment} key={appointment.reference} updateStatus={updateStatus} />
+              ))}
+            </div>
+          </>
+        )}
       </section>
     </main>
   );

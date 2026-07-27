@@ -22,6 +22,8 @@ conflict-safe appointment booking and a private owner dashboard.
 - Booking reference and secure appointment management link
 - Automatic confirmation and client cancellation flow
 - Private owner dashboard with upcoming and past appointments
+- Owner Today, Day, Week, and List calendar views with open-time gaps,
+  color-coded statuses, and quick appointment details
 - Owner actions for completion, cancellation, and manual booking
 - Encrypted owner password and signed 12-hour owner sessions
 - Email/SMS delivery code for booking receipts, reminders, confirmations, and

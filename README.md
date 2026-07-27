@@ -142,7 +142,7 @@ only after at least one configured delivery channel succeeds.
 
 ## Data storage
 
-Cloudflare D1 stores two related record types.
+Cloudflare D1 stores four related record types.
 
 ### `appointments`
 
@@ -167,6 +167,13 @@ The booking API requires both a valid email address and a valid phone number.
 Stores every reserved 15-minute segment for an appointment, including the
 15-minute turnaround period. Its date-and-time primary key prevents two
 appointments from reserving the same segment.
+
+### `availability_blocks`
+
+Stores owner-created full-day and partial-day closures, including the date,
+start time, end time, and optional owner-only reason. Each closure also reserves
+the matching 15-minute segments in `appointment_slots`, so customer bookings
+cannot overlap time off.
 
 ### `request_limits`
 

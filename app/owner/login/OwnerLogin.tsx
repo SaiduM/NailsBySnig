@@ -28,7 +28,12 @@ export function OwnerLogin() {
 
   return (
     <main className="manage-appointment">
-      <form className="manage-card owner-login" onSubmit={submit}>
+      <form
+        action="/api/owner/session"
+        className="manage-card owner-login"
+        method="post"
+        onSubmit={submit}
+      >
         <Link className="brand" href="/"><span className="brand-mark">NS</span><span>NailsBySnig</span></Link>
         <p className="eyebrow">Private owner access</p>
         <h1>Welcome back.</h1>

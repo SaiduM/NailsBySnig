@@ -28,6 +28,7 @@ Treat these as editable launch defaults until the owner confirms the final menu.
 - Booking window: tomorrow through two calendar months ahead.
 - Available days: Tuesday through Saturday.
 - Clients may select one or more services in a single appointment; duration and price are the sum of all selections.
+- Prices remain stored with appointments but are temporarily hidden from all customer and owner interfaces.
 - Operating hours: 9:00 AM–5:00 PM, with appointment starts every 15 minutes when all selected services can finish by 5:00 PM.
 - Turnaround gap: reserve 15 minutes after every appointment for cleanup and preparation before the next client.
 - Conflict protection: reserve every 15-minute segment of the combined service duration plus the turnaround gap in one atomic database operation so overlapping appointments cannot both succeed.

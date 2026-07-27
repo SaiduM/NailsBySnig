@@ -26,6 +26,8 @@ conflict-safe appointment booking and a private owner dashboard.
 - Encrypted owner password and signed 12-hour owner sessions
 - Email/SMS delivery code for booking receipts, reminders, confirmations, and
   cancellations
+- Service prices remain stored for future use but are temporarily hidden from
+  customer and owner interfaces
 
 ## Production readiness
 

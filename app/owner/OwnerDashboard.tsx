@@ -101,7 +101,7 @@ export function OwnerDashboard({ ownerName }: { ownerName: string }) {
               <div className="appointment-main">
                 <div><h2>{appointment.client_name}</h2><span className={`status status-${appointment.status}`}>{appointment.status}</span></div>
                 <strong>{appointment.service_name}</strong>
-                <p>{appointment.duration_minutes} min · ${appointment.price_dollars} · {appointment.reference}</p>
+                <p>{appointment.duration_minutes} min · {appointment.reference}</p>
                 <div className="appointment-contact">
                   {appointment.client_email && <a href={`mailto:${appointment.client_email}`}>{appointment.client_email}</a>}
                   {appointment.client_phone && <a href={`tel:${appointment.client_phone}`}>{appointment.client_phone}</a>}

@@ -89,7 +89,6 @@ export function BookingExperience() {
   const [cancelUrl, setCancelUrl] = useState("");
   const selectedServices = services.filter((service) => serviceIds.includes(service.id));
   const totalDuration = selectedServices.reduce((total, service) => total + service.duration, 0);
-  const totalPrice = selectedServices.reduce((total, service) => total + service.price, 0);
 
   useEffect(() => {
     const controller = new AbortController();
@@ -232,7 +231,6 @@ export function BookingExperience() {
               <p>{service.description}</p>
               <div className="service-meta">
                 <span>{service.duration} min</span>
-                <strong>from ${service.price}</strong>
               </div>
               <button onClick={() => openBooking(service)}>
                 Book this service <span>↗</span>
@@ -287,7 +285,7 @@ export function BookingExperience() {
                 <div>
                   <small>{selectedServices.length === 1 ? "Your selection" : `${selectedServices.length} services selected`}</small>
                   <strong>{selectedServices.length ? selectedServices.map((service) => service.name).join(" + ") : "Choose at least one service"}</strong>
-                  <p>{totalDuration} min · ${totalPrice}</p>
+                  <p>{totalDuration} min</p>
                 </div>
               </div>
             </div>
@@ -305,7 +303,7 @@ export function BookingExperience() {
                       <span className="choice-mark" aria-hidden="true">{serviceIds.includes(service.id) ? "✓" : service.symbol}</span>
                       <span>
                         <strong>{service.name}</strong>
-                        <small>{service.duration} min · ${service.price}</small>
+                        <small>{service.duration} min</small>
                       </span>
                     </label>
                   ))}

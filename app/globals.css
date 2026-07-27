@@ -311,10 +311,14 @@ footer > div { display: flex; justify-content: flex-end; gap: 18px; font-size: 1
   h1 { font-size: 54px; }
   .hero-actions { align-items: flex-start; flex-direction: column; }
   .mini-proof { gap: 17px; }
-  .hero-art { min-height: 420px; }
-  .work-art { min-height: 410px; }
-  .nail-swatch { width: 112px; height: 205px; }
-  .polish-bottle { transform: scale(.82) rotate(8deg); }
+  .hero-art { min-height: 245px; }
+  .hero-art > p { right: 5%; bottom: 4%; font-size: 14px; }
+  .polish-bottle { top: 38%; transform: scale(.58) rotate(8deg); transform-origin: top center; }
+  .spark { font-size: 34px; }
+  .spark-two { font-size: 22px; }
+  .work-copy { padding: 58px 22px; }
+  .work-copy h2 { font-size: 46px; }
+  .work-art { display: none; }
   .section-heading { display: block; }
   .section-heading > p { margin-top: 22px; }
   .services-section { padding-inline: 16px; }

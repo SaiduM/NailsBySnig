@@ -162,6 +162,14 @@ test("uses a compact two-column service grid in the mobile app", async () => {
   assert.match(styles, /-webkit-line-clamp: 4/);
 });
 
+test("keeps stacked mobile artwork compact without changing desktop sections", async () => {
+  const styles = await source("app/globals.css");
+  assert.match(styles, /\.hero-art \{ min-height: 245px; \}/);
+  assert.match(styles, /\.work-copy \{ padding: 58px 22px; \}/);
+  assert.match(styles, /\.work-art \{ display: none; \}/);
+  assert.match(styles, /\.work-section \{ display: grid; grid-template-columns: 1fr 1fr;/);
+});
+
 test("protects an owner dashboard for appointment tracking and status changes", async () => {
   const [ownerApi, ownerPage, dashboard, ownerAuth, ownerSession, ownerLogin] = await Promise.all([
     source("app/api/owner/appointments/route.ts"),

@@ -12,6 +12,8 @@ conflict-safe appointment booking and a private owner dashboard.
 - Responsive business website and installable Progressive Web App (PWA)
 - Compact two-by-two service cards in the phone/app layout with a four-card
   desktop row
+- Shortened mobile Home artwork and a text-first Instagram section to reduce
+  repetitive phone scrolling
 - Multiple services in one appointment
 - Booking from tomorrow through the next two calendar months
 - One-tap mobile booking calendar with closed days visibly unavailable

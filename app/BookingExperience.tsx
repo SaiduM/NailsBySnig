@@ -202,9 +202,7 @@ export function BookingExperience() {
             <a href="#services">Explore services</a>
           </div>
           <div className="mini-proof">
-            <span><strong>5.0</strong> client love</span>
             <span><strong>1:1</strong> private appointments</span>
-            <span><strong>7-free</strong> gel options</span>
           </div>
         </div>
         <div className="hero-art" aria-label="Abstract nail polish composition">

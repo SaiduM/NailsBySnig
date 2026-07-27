@@ -1,0 +1,39 @@
+# Nail by Snig product brief
+
+## Goal
+
+Create a polished, mobile-first business website that also feels like an installable app. Let a client understand the studio and request an appointment without navigating a marketplace.
+
+## MVP release
+
+1. Business landing page with services, trust signals, hours, location placeholder, and contact placeholder.
+2. Four-step booking flow: choose service, choose date, choose available time, enter contact details and confirm.
+3. Durable appointment records with server-side validation and slot conflict protection.
+4. Responsive confirmation view with a booking reference.
+
+## Initial service catalog
+
+Treat these as editable launch defaults until the owner confirms the final menu.
+
+| Service | Duration | Price |
+| --- | ---: | ---: |
+| Signature Gel Manicure | 60 min | $55 |
+| Structured Gel Manicure | 75 min | $70 |
+| Gel-X Full Set | 90 min | $85 |
+| Custom Nail Art | 30 min add-on | $25 |
+
+## Operating defaults
+
+- Time zone: America/Phoenix.
+- Booking window: the next 21 days.
+- Available days: Tuesday through Saturday.
+- Available start times: 9:00 AM, 11:00 AM, 1:30 PM, and 4:00 PM.
+- Appointments begin as `pending` so the studio can confirm them manually.
+
+## Later roadmap
+
+1. Owner appointment dashboard and status changes.
+2. Email or SMS confirmation and reminders.
+3. Calendar sync and configurable availability.
+4. Deposits and cancellation policy acceptance.
+5. Installable PWA polish and returning-client convenience.

@@ -1,0 +1,4 @@
+interface:
+  display_name: "Build Nail Booking"
+  short_description: "Build and evolve the nail booking app"
+  default_prompt: "Use $build-nail-booking to implement the next verified feature for Nail by Snig."

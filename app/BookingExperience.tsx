@@ -1,0 +1,310 @@
+"use client";
+
+import { FormEvent, useMemo, useState } from "react";
+
+const services = [
+  {
+    id: "signature-gel",
+    name: "Signature Gel Manicure",
+    description: "Detailed prep, shaping, cuticle care, and glossy gel color.",
+    duration: 60,
+    price: 55,
+    symbol: "◒",
+  },
+  {
+    id: "structured-gel",
+    name: "Structured Gel Manicure",
+    description: "Added strength and structure for a long-lasting natural set.",
+    duration: 75,
+    price: 70,
+    symbol: "◇",
+  },
+  {
+    id: "gel-x",
+    name: "Gel-X Full Set",
+    description: "Lightweight soft-gel extensions shaped and finished for you.",
+    duration: 90,
+    price: 85,
+    symbol: "✦",
+  },
+  {
+    id: "custom-art",
+    name: "Custom Nail Art",
+    description: "An art add-on for chrome, linework, aura, or tiny details.",
+    duration: 30,
+    price: 25,
+    symbol: "✺",
+  },
+] as const;
+
+const times = ["09:00", "11:00", "13:30", "16:00"];
+type Service = (typeof services)[number];
+
+function dateKey(date: Date) {
+  const year = date.getFullYear();
+  const month = String(date.getMonth() + 1).padStart(2, "0");
+  const day = String(date.getDate()).padStart(2, "0");
+  return `${year}-${month}-${day}`;
+}
+
+function displayDate(value: string) {
+  return new Intl.DateTimeFormat("en-US", {
+    weekday: "short",
+    month: "short",
+    day: "numeric",
+  }).format(new Date(`${value}T12:00:00`));
+}
+
+function displayTime(value: string) {
+  const [hour, minute] = value.split(":").map(Number);
+  return new Intl.DateTimeFormat("en-US", {
+    hour: "numeric",
+    minute: "2-digit",
+  }).format(new Date(2026, 0, 1, hour, minute));
+}
+
+function nextBookableDates() {
+  const result: string[] = [];
+  const cursor = new Date();
+  cursor.setHours(12, 0, 0, 0);
+  cursor.setDate(cursor.getDate() + 1);
+  while (result.length < 10) {
+    const day = cursor.getDay();
+    if (day >= 2 && day <= 6) result.push(dateKey(cursor));
+    cursor.setDate(cursor.getDate() + 1);
+  }
+  return result;
+}
+
+export function BookingExperience() {
+  const dates = useMemo(nextBookableDates, []);
+  const [bookingOpen, setBookingOpen] = useState(false);
+  const [serviceId, setServiceId] = useState<string>("signature-gel");
+  const [date, setDate] = useState(dates[0]);
+  const [time, setTime] = useState(times[1]);
+  const [status, setStatus] = useState<"idle" | "submitting" | "success" | "error">("idle");
+  const [message, setMessage] = useState("");
+  const [reference, setReference] = useState("");
+  const selectedService = services.find((service) => service.id === serviceId) ?? services[0];
+
+  function openBooking(service?: Service) {
+    if (service) setServiceId(service.id);
+    setBookingOpen(true);
+    setStatus("idle");
+    requestAnimationFrame(() =>
+      document.getElementById("booking")?.scrollIntoView({ behavior: "smooth" }),
+    );
+  }
+
+  async function submitBooking(event: FormEvent<HTMLFormElement>) {
+    event.preventDefault();
+    setStatus("submitting");
+    setMessage("");
+    const form = new FormData(event.currentTarget);
+    const payload = {
+      serviceId,
+      date,
+      time,
+      name: String(form.get("name") ?? "").trim(),
+      email: String(form.get("email") ?? "").trim(),
+      phone: String(form.get("phone") ?? "").trim(),
+      notes: String(form.get("notes") ?? "").trim(),
+    };
+
+    try {
+      const response = await fetch("/api/appointments", {
+        method: "POST",
+        headers: { "content-type": "application/json" },
+        body: JSON.stringify(payload),
+      });
+      const data = (await response.json()) as { error?: string; reference?: string };
+      if (!response.ok) throw new Error(data.error || "We couldn’t save that appointment.");
+      setReference(data.reference ?? "");
+      setStatus("success");
+    } catch (error) {
+      setMessage(error instanceof Error ? error.message : "Please try again.");
+      setStatus("error");
+    }
+  }
+
+  return (
+    <main>
+      <header className="site-header">
+        <a className="brand" href="#top" aria-label="Nail by Snig home">
+          <span className="brand-mark">NS</span>
+          <span>Nail by Snig</span>
+        </a>
+        <nav aria-label="Main navigation">
+          <a href="#services">Services</a>
+          <a href="#studio">The studio</a>
+          <button className="header-book" onClick={() => openBooking()}>Book now</button>
+        </nav>
+      </header>
+
+      <section className="hero" id="top">
+        <div className="hero-copy">
+          <p className="eyebrow">Private nail studio · Phoenix</p>
+          <h1>Small details.<br /><em>Big nail energy.</em></h1>
+          <p className="hero-lede">
+            Thoughtful prep, artful finishes, and appointments that never feel rushed.
+            Your next favorite set is a few taps away.
+          </p>
+          <div className="hero-actions">
+            <button className="primary-action" onClick={() => openBooking()}>
+              Find an appointment <span>→</span>
+            </button>
+            <a href="#services">Explore services</a>
+          </div>
+          <div className="mini-proof">
+            <span><strong>5.0</strong> client love</span>
+            <span><strong>1:1</strong> private appointments</span>
+            <span><strong>7-free</strong> gel options</span>
+          </div>
+        </div>
+        <div className="hero-art" aria-label="Abstract nail polish composition">
+          <div className="arch arch-one"><span>fresh set</span></div>
+          <div className="arch arch-two"></div>
+          <div className="polish-bottle"><span>NS</span></div>
+          <div className="spark spark-one">✦</div>
+          <div className="spark spark-two">✦</div>
+          <p>made with care<br />worn with joy</p>
+        </div>
+      </section>
+
+      <section className="services-section" id="services">
+        <div className="section-heading">
+          <div>
+            <p className="eyebrow">The menu</p>
+            <h2>Choose your kind of <em>perfect</em></h2>
+          </div>
+          <p>Every service includes detailed prep and a calm, unhurried appointment.</p>
+        </div>
+        <div className="service-grid">
+          {services.map((service, index) => (
+            <article className="service-card" key={service.id}>
+              <div className="service-index">0{index + 1}</div>
+              <div className="service-symbol">{service.symbol}</div>
+              <h3>{service.name}</h3>
+              <p>{service.description}</p>
+              <div className="service-meta">
+                <span>{service.duration} min</span>
+                <strong>from ${service.price}</strong>
+              </div>
+              <button onClick={() => openBooking(service)}>
+                Book this service <span>↗</span>
+              </button>
+            </article>
+          ))}
+        </div>
+      </section>
+
+      <section className="studio-section" id="studio">
+        <div className="studio-note">
+          <p className="eyebrow">Why Nail by Snig</p>
+          <h2>A little appointment that feels like <em>your time.</em></h2>
+        </div>
+        <div className="studio-points">
+          <div><span>01</span><h3>Clean & considered</h3><p>Single-use files and careful sanitation for every appointment.</p></div>
+          <div><span>02</span><h3>Made for you</h3><p>We shape, color, and design around your nails and your style.</p></div>
+          <div><span>03</span><h3>No crowded salon</h3><p>A quiet one-on-one studio experience from start to finish.</p></div>
+        </div>
+      </section>
+
+      <section className={`booking-section ${bookingOpen ? "is-open" : ""}`} id="booking">
+        {!bookingOpen ? (
+          <div className="booking-invite">
+            <p className="eyebrow">Ready when you are</p>
+            <h2>Let&apos;s make something <em>beautiful.</em></h2>
+            <button className="primary-action light" onClick={() => openBooking()}>
+              Start booking <span>→</span>
+            </button>
+          </div>
+        ) : status === "success" ? (
+          <div className="confirmation" role="status">
+            <div className="confirmation-mark">✓</div>
+            <p className="eyebrow">Request received</p>
+            <h2>You&apos;re on the books.</h2>
+            <p>
+              We&apos;ll confirm your {selectedService.name.toLowerCase()} for{" "}
+              <strong>{displayDate(date)} at {displayTime(time)}</strong>.
+            </p>
+            <div className="reference">Booking reference <strong>{reference}</strong></div>
+            <button onClick={() => { setStatus("idle"); setBookingOpen(false); }}>Back to home</button>
+          </div>
+        ) : (
+          <div className="booking-shell">
+            <div className="booking-summary">
+              <p className="eyebrow">Book your visit</p>
+              <h2>Your next set starts here.</h2>
+              <p>Choose what works for you. Your appointment stays pending until the studio confirms it.</p>
+              <div className="selected-summary">
+                <span>{selectedService.symbol}</span>
+                <div><small>Your selection</small><strong>{selectedService.name}</strong><p>{selectedService.duration} min · ${selectedService.price}</p></div>
+              </div>
+            </div>
+            <form className="booking-form" onSubmit={submitBooking}>
+              <fieldset>
+                <legend><span>1</span> Choose a service</legend>
+                <div className="select-wrap">
+                  <select value={serviceId} onChange={(event) => setServiceId(event.target.value)} aria-label="Service">
+                    {services.map((service) => (
+                      <option value={service.id} key={service.id}>
+                        {service.name} — ${service.price}
+                      </option>
+                    ))}
+                  </select>
+                </div>
+              </fieldset>
+
+              <fieldset>
+                <legend><span>2</span> Pick a day</legend>
+                <div className="date-row">
+                  {dates.slice(0, 5).map((value) => (
+                    <button className={date === value ? "selected" : ""} type="button" onClick={() => setDate(value)} key={value}>
+                      <small>{displayDate(value).split(",")[0]}</small>
+                      <strong>{new Date(`${value}T12:00:00`).getDate()}</strong>
+                      <span>{new Intl.DateTimeFormat("en-US", { month: "short" }).format(new Date(`${value}T12:00:00`))}</span>
+                    </button>
+                  ))}
+                </div>
+              </fieldset>
+
+              <fieldset>
+                <legend><span>3</span> Pick a time</legend>
+                <div className="time-row">
+                  {times.map((value) => (
+                    <button className={time === value ? "selected" : ""} type="button" onClick={() => setTime(value)} key={value}>
+                      {displayTime(value)}
+                    </button>
+                  ))}
+                </div>
+              </fieldset>
+
+              <fieldset>
+                <legend><span>4</span> Your details</legend>
+                <div className="field-grid">
+                  <label>Full name<input name="name" autoComplete="name" required minLength={2} /></label>
+                  <label>Phone<input name="phone" type="tel" autoComplete="tel" required /></label>
+                  <label className="full-field">Email<input name="email" type="email" autoComplete="email" required /></label>
+                  <label className="full-field">Anything we should know? <small>Optional</small><textarea name="notes" rows={3} placeholder="Nail art ideas, removal needed, or accessibility notes..." /></label>
+                </div>
+              </fieldset>
+
+              {status === "error" && <p className="form-error" role="alert">{message}</p>}
+              <button className="submit-booking" disabled={status === "submitting"} type="submit">
+                {status === "submitting" ? "Saving your appointment…" : "Request appointment"} <span>→</span>
+              </button>
+              <p className="form-fineprint">No payment is collected today. We&apos;ll contact you to confirm.</p>
+            </form>
+          </div>
+        )}
+      </section>
+
+      <footer>
+        <a className="brand" href="#top"><span className="brand-mark">NS</span><span>Nail by Snig</span></a>
+        <p>Thoughtful nails, simply booked.</p>
+        <div><a href="#services">Services</a><a href="#booking">Book</a><span>Tue–Sat · Phoenix, AZ</span></div>
+      </footer>
+    </main>
+  );
+}

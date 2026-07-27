@@ -117,11 +117,13 @@ test("requires either email or phone and supports confirmation, reminders, and c
 });
 
 test("protects an owner dashboard for appointment tracking and status changes", async () => {
-  const [ownerApi, ownerPage, dashboard, ownerAuth] = await Promise.all([
+  const [ownerApi, ownerPage, dashboard, ownerAuth, ownerSession, ownerLogin] = await Promise.all([
     source("app/api/owner/appointments/route.ts"),
     source("app/owner/page.tsx"),
     source("app/owner/OwnerDashboard.tsx"),
     source("lib/owner-auth.ts"),
+    source("lib/owner-session.ts"),
+    source("app/owner/login/OwnerLogin.tsx"),
   ]);
   assert.match(ownerAuth, /OWNER_EMAIL/);
   assert.match(ownerAuth, /oai-authenticated-user-email/);
@@ -132,6 +134,10 @@ test("protects an owner dashboard for appointment tracking and status changes", 
   assert.match(dashboard, /Show past appointments/);
   assert.match(dashboard, /Mark complete/);
   assert.match(dashboard, /Add appointment/);
+  assert.match(ownerSession, /SameSite=Strict/);
+  assert.match(ownerSession, /crypto\.subtle\.sign/);
+  assert.match(ownerLogin, /Owner password/);
+  assert.match(ownerPage, /verifyOwnerSession/);
 });
 
 test("prepares a full-stack Cloudflare Pages deployment", async () => {

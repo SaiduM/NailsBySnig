@@ -1,15 +1,19 @@
 import { redirect } from "next/navigation";
 import Link from "next/link";
+import { cookies } from "next/headers";
 import { getChatGPTUser } from "../chatgpt-auth";
+import { OWNER_SESSION_COOKIE, verifyOwnerSession } from "../../lib/owner-session";
 import { OwnerDashboard } from "./OwnerDashboard";
 
 export const dynamic = "force-dynamic";
 
 export default async function OwnerPage() {
   const user = await getChatGPTUser();
-  if (!user) redirect("/signin-with-chatgpt?return_to=%2Fowner");
   const ownerEmail = (process.env.OWNER_EMAIL ?? "").trim().toLowerCase();
-  if (!ownerEmail || user.email.toLowerCase() !== ownerEmail) {
+  const session = (await cookies()).get(OWNER_SESSION_COOKIE)?.value ?? "";
+  const passwordSessionValid = await verifyOwnerSession(session);
+  if (!user && !passwordSessionValid) redirect("/owner/login");
+  if (!ownerEmail || (user && user.email.toLowerCase() !== ownerEmail)) {
     return (
       <main className="manage-appointment">
         <section className="manage-card">
@@ -20,8 +24,5 @@ export default async function OwnerPage() {
       </main>
     );
   }
-  const signOutPath = user.provider === "cloudflare"
-    ? "/cdn-cgi/access/logout"
-    : "/signout-with-chatgpt?return_to=/";
-  return <OwnerDashboard ownerName={user.displayName} signOutPath={signOutPath} />;
+  return <OwnerDashboard ownerName={user?.displayName ?? ownerEmail} />;
 }

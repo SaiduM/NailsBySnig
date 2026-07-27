@@ -4,7 +4,7 @@ import { ownerAccess } from "../../../../lib/owner-auth";
 export const runtime = "edge";
 
 export async function GET(request: Request) {
-  const access = ownerAccess(request);
+  const access = await ownerAccess(request);
   if (!access.allowed) return Response.json({ error: access.error }, { status: access.status });
   if (!env.DB) return Response.json({ error: "Booking storage is unavailable." }, { status: 503 });
 
@@ -27,7 +27,7 @@ export async function GET(request: Request) {
 }
 
 export async function PATCH(request: Request) {
-  const access = ownerAccess(request);
+  const access = await ownerAccess(request);
   if (!access.allowed) return Response.json({ error: access.error }, { status: access.status });
   if (!env.DB) return Response.json({ error: "Booking storage is unavailable." }, { status: 503 });
 

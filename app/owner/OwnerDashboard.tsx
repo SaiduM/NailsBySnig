@@ -17,7 +17,7 @@ type Appointment = {
   status: string;
 };
 
-export function OwnerDashboard({ ownerName, signOutPath }: { ownerName: string; signOutPath: string }) {
+export function OwnerDashboard({ ownerName }: { ownerName: string }) {
   const [appointments, setAppointments] = useState<Appointment[]>([]);
   const [includePast, setIncludePast] = useState(false);
   const [state, setState] = useState<"loading" | "ready" | "error">("loading");
@@ -68,11 +68,16 @@ export function OwnerDashboard({ ownerName, signOutPath }: { ownerName: string; 
     await load();
   }
 
+  async function signOut() {
+    await fetch("/api/owner/session", { method: "DELETE" });
+    window.location.assign("/owner/login");
+  }
+
   return (
     <main className="owner-page">
       <header className="owner-header">
         <Link className="brand" href="/"><span className="brand-mark">NS</span><span>NailsBySnig</span></Link>
-        <div><span>Signed in as {ownerName}</span><Link href={signOutPath}>Sign out</Link></div>
+        <div><span>Signed in as {ownerName}</span><button className="owner-signout" onClick={signOut}>Sign out</button></div>
       </header>
       <section className="owner-content">
         <div className="owner-title">

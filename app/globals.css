@@ -186,6 +186,9 @@ textarea { resize: vertical; }
 .owner-header { min-height: 76px; padding: 16px clamp(20px, 5vw, 72px); display: flex; align-items: center; justify-content: space-between; border-bottom: 1px solid var(--line); background: var(--paper); }
 .owner-header > div { display: flex; gap: 18px; align-items: center; font-size: 12px; }
 .owner-header > div a { text-decoration: underline; font-weight: 700; }
+.owner-signout { border: 0; background: none; padding: 0; text-decoration: underline; font-size: 12px; font-weight: 700; }
+.owner-login label { display: block; margin-bottom: 18px; }
+.owner-login > button { margin-top: 4px; }
 .owner-content { max-width: 1180px; margin: auto; padding: 60px 24px 100px; }
 .owner-title { display: flex; justify-content: space-between; align-items: end; gap: 24px; margin-bottom: 30px; }
 .owner-title h1 { margin: 0; font-size: clamp(52px, 8vw, 92px); }
